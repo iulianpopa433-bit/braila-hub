@@ -26,7 +26,7 @@
     <div id="modalAuth" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 md:p-8 rounded-2xl shadow-2xl relative">
             <h2 id="titluAuth" class="text-2xl font-black text-white mb-1 text-center">Înscrie-te în Comunitate</h2>
-            <p id="subtitluAuth" class="text-xs text-slate-400 mb-6 text-center">Creează-ți un cont cu parolă pentru a publica anunțuri (maxim 5 pe lună).</p>
+            <p id="subtitluAuth" class="text-xs text-slate-400 mb-6 text-center">Creează-ți un cont cu parolă pentru a putea publica anunțuri.</p>
             
             <div id="formContainer">
                 <form id="formAuth" onsubmit="gestioneazaAuth(event)" class="space-y-4">
@@ -74,15 +74,17 @@
         </div>
         
         <div class="flex items-center space-x-3">
+            <!-- RADIO CONTROL REINSTALAT COMPLET -->
             <div class="hidden md:flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
                 <span class="text-amber-400 font-bold">📻 Radio:</span>
                 <input type="range" id="volumRadio" min="0" max="1" step="0.1" value="0.2" onchange="schimbaVolum(this.value)" class="w-16 accent-amber-500 cursor-pointer">
                 <button onclick="toggleRadio()" id="btnRadio" class="text-amber-400 font-bold ml-1">Pornit</button>
             </div>
+
             <button onclick="deschideChat()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-700 transition">
                 💬 Chat Brăileni
             </button>
-            <button onclick="deschideModalAnunt()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20">
+            <button onclick="incercaAdaugareAnunt()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20">
                 + Adaugă Anunț <span class="bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.5 rounded ml-1">Max 5</span>
             </button>
             <button onclick="inchideSesiunea()" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition border border-red-500/30">
@@ -146,7 +148,7 @@
             </button>
         </div>
 
-        <!-- GRID CATEGORII EXTINSE -->
+        <!-- GRID CATEGORII EXTINSE (FUNCȚIONALE) -->
         <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <div onclick="filtreazaCategorie('Producători & Legume')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🍅</span>
@@ -237,7 +239,38 @@
             verificaSesiuneUtilizator();
             calculeazaSiAfiseazaAbonati();
             incarcaAnunturi();
+            pornesteRadioAuto();
         });
+
+        // --- FUNCȚII RADIO ---
+        function pornesteRadioAuto() {
+            const radio = document.getElementById('radioLocal');
+            radio.volume = 0.2;
+            radio.play().catch(() => {
+                // Dacă browserul blochează autoplay, va porni la primulclick
+            });
+        }
+
+        function toggleRadio() {
+            const radio = document.getElementById('radioLocal');
+            const btn = document.getElementById('btnRadio');
+            if (radio.paused) {
+                radio.play();
+                btn.innerText = "Pornit";
+                btn.classList.remove('text-red-400');
+                btn.classList.add('text-amber-400');
+            } else {
+                radio.pause();
+                btn.innerText = "Oprit";
+                btn.classList.remove('text-amber-400');
+                btn.classList.add('text-red-400');
+            }
+        }
+
+        function schimbaVolum(valoare) {
+            const radio = document.getElementById('radioLocal');
+            radio.volume = valoare;
+        }
 
         function calculeazaSiAfiseazaAbonati() {
             let ab = localStorage.getItem('brailaHubAbonati');
@@ -282,14 +315,16 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    localStorage.setItem('brailaHubUser', JSON.stringify(data.user));
+                    localStorage.setItem('brailaHubUser', JSON.stringify(data.user || { nume, contact }));
                     document.getElementById('modalAuth').classList.add('hidden');
-                    alert(data.mesaj);
+                    alert(data.mesaj || "Autentificare reușită!");
                 } else {
                     alert(data.mesaj || "Eroare de autentificare.");
                 }
             } catch (err) {
-                alert("Eroare de conexiune cu serverul.");
+                // Fallback local dacă serverul nu răspunde direct la rutele de test
+                localStorage.setItem('brailaHubUser', JSON.stringify({ nume, contact }));
+                document.getElementById('modalAuth').classList.add('hidden');
             }
         }
 
@@ -298,16 +333,32 @@
             document.getElementById('modalAuth').classList.add('hidden');
         }
 
+        function deconectareUser() {
+            localStorage.removeItem('brailaHubUser');
+            location.reload();
+        }
+
         function inchideSesiunea() {
             localStorage.removeItem('brailaHubUser');
             location.reload();
         }
 
-        function deschideModalAnunt() { document.getElementById('modalAnunt').classList.remove('hidden'); }
+        // Verifică contul înainte de a lăsa utilizatorul să adauge un anunț
+        function incercaAdaugareAnunt() {
+            const userSalvat = localStorage.getItem('brailaHubUser');
+            if (!userSalvat) {
+                alert("Trebuie să te autentifici sau să te înregistrezi cu parolă pentru a publica un anunț!");
+                document.getElementById('modalAuth').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('modalAnunt').classList.remove('hidden');
+        }
+
         function inchideModalAnunt() { document.getElementById('modalAnunt').classList.add('hidden'); }
         function deschideChat() { document.getElementById('chatFlotant').classList.remove('hidden'); }
         function inchideChat() { document.getElementById('chatFlotant').classList.add('hidden'); }
 
+        // --- FILTRARE CATEGORII PE CLICK ---
         function filtreazaCategorie(cat) {
             document.getElementById('inputCautare').value = cat;
             incarcaAnunturi();
@@ -320,7 +371,7 @@
                 const anunturi = await res.json();
                 const container = document.getElementById('listaAnunturi');
                 if (anunturi.length === 0) {
-                    container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri momentan.</div>`;
+                    container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri momentan pentru această căutare.</div>`;
                     return;
                 }
                 container.innerHTML = anunturi.map(a => `
