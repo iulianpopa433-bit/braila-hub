@@ -34,18 +34,12 @@ const anuntSchema = new mongoose.Schema({
 
 const Anunt = mongoose.model('Anunt', anuntSchema);
 
-// Preluare anunțuri (cu filtru de căutare sau cartier)
 app.get('/api/anunturi', async (req, res) => {
     try {
         const { cautare, cartier, telefon } = req.query;
         let query = {};
-
-        if (telefon) {
-            query.telefon = telefon;
-        }
-        if (cartier) {
-            query.cartier = { $regex: cartier, $options: 'i' };
-        }
+        if (telefon) query.telefon = telefon;
+        if (cartier) query.cartier = { $regex: cartier, $options: 'i' };
         if (cautare) {
             query.$or = [
                 { titlu: { $regex: cautare, $options: 'i' } },
@@ -54,7 +48,6 @@ app.get('/api/anunturi', async (req, res) => {
                 { denumire: { $regex: cautare, $options: 'i' } }
             ];
         }
-
         const anunturi = await Anunt.find(query).sort({ dataCreare: -1 });
         res.json(anunturi);
     } catch (error) {
@@ -62,41 +55,22 @@ app.get('/api/anunturi', async (req, res) => {
     }
 });
 
-// Adăugare anunț (cu limită de 5 pe lună)
 app.post('/api/anunturi', async (req, res) => {
     try {
         const { telefon, categorie, denumire, titlu, pret, cartier, strada, numarStrada, detalii } = req.body;
-
         if (!telefon || !titlu || !pret || !cartier) {
             return res.status(400).json({ mesaj: "Telefonul, titlul, prețul și cartierul sunt obligatorii." });
         }
-
         const oLunaInUrma = new Date();
         oLunaInUrma.setDate(oLunaInUrma.getDate() - 30);
-
         const numarAnunturiExistente = await Anunt.countDocuments({
             telefon,
             dataCreare: { $gte: oLunaInUrma }
         });
-
         if (numarAnunturiExistente >= 5) {
-            return res.status(400).json({ 
-                mesaj: "Limită atinsă! Ai deja 5 anunțuri active înregistrate pe acest număr în ultima lună." 
-            });
+            return res.status(400).json({ mesaj: "Limită atinsă! Ai deja 5 anunțuri active înregistrate pe acest număr în ultima lună." });
         }
-
-        const anuntNou = new Anunt({ 
-            telefon, 
-            categorie, 
-            denumire: denumire || '', 
-            titlu, 
-            pret, 
-            cartier, 
-            strada, 
-            numarStrada: numarStrada || '', 
-            detalii 
-        });
-        
+        const anuntNou = new Anunt({ telefon, categorie, denumire: denumire || '', titlu, pret, cartier, strada, numarStrada: numarStrada || '', detalii });
         await anuntNou.save();
         res.status(201).json({ mesaj: "Anunțul a fost publicat cu succes!", anunt: anuntNou });
     } catch (error) {
@@ -104,7 +78,6 @@ app.post('/api/anunturi', async (req, res) => {
     }
 });
 
-// Ștergere anunț propriu
 app.delete('/api/anunturi/:id', async (req, res) => {
     try {
         await Anunt.findByIdAndDelete(req.params.id);
