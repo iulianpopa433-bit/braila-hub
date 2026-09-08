@@ -5,9 +5,10 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(express.static(__dirname)); // Aceasta linie va servi fisierul index.html
 
 // Șirul manual cu shard-uri (Ocolește blocajul DNS din rețeaua ta)
-const MONGO_URI = 'mongodb://iulianpopa433_db_user:z0x1hJYhOAFOqjWG@cluster0-shard-00-00.t6io4vq.mongodb.net:27017,cluster0-shard-00-01.t6io4vq.mongodb.net:27017,cluster0-shard-00-02.t6io4vq.mongodb.net:27017/brailahub?ssl=true&replicaSet=atlas-t6io4vq-shard-0&authSource=admin&retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://iulianpopa433_db_user:z0x1hJYhOAFOqjWG@cluster0-shard-00-00.t6io4vq.mongodb.net:27017,cluster0-shard-00-01.t6io4vq.mongodb.net:27017,cluster0-shard-00-02.t6io4vq.mongodb.net:27017/brailahub?ssl=true&replicaSet=atlas-t6io4vq-shard-0&authSource=admin&retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI, {
     serverSelectionTimeoutMS: 30000,
