@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brăila Hub - Piața Digitală Locală</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="w-full max-w-5xl mx-auto px-4 py-4 flex justify-between items-center border-b border-slate-800/60">
+        <div class="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+            Brăila<span class="text-amber-500">Hub</span>
+        </div>
+        <button onclick="deschideModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition flex items-center gap-1.5">
+            <span>+ Adaugă Anunț</span>
+            <span class="bg-slate-950/20 px-1.5 py-0.5 rounded text-[10px]">Max 10</span>
+        </button>
+    </header>
+
+    <!-- SECȚIUNEA CENTRALĂ (HERO) CU SCHIȚA CEASULUI -->
+    <main class="max-w-5xl mx-auto px-4 py-10 flex-grow flex flex-col items-center justify-center text-center w-full">
+        
+        <!-- SCHIȚA CEASULUI DIN BRĂILA (Centrul vizual) -->
+        <div class="relative mb-6 group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full blur opacity-30 group-hover:opacity-75 transition duration-500"></div>
+            <div class="relative w-28 h-28 sm:w-36 sm:h-36 bg-slate-900 border-2 border-amber-500/40 rounded-full flex flex-col items-center justify-center shadow-2xl">
+                <span class="text-[11px] uppercase tracking-widest text-amber-400 font-extrabold mb-1">Brăila</span>
+                <div class="text-3xl sm:text-4xl">⏰</div>
+                <span class="text-[10px] text-slate-400 mt-1">Piața Traian</span>
+            </div>
+        </div>
+
+        <span class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider border border-amber-500/20 mb-3">
+            Fără moderare • Direct între localnici
+        </span>
+        
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-2xl">
+            Totul în Brăila, la un click distanță
+        </h1>
+        
+        <p class="text-slate-400 mt-3 max-w-lg mx-auto text-sm sm:text-base">
+            Agri, auto, servicii locale, pește proaspăt din Dunăre și HoReCa. Publicare instantanee gratuită.
+        </p>
+
+        <!-- BARA DE CĂUTARE -->
+        <div class="mt-8 w-full max-w-xl flex gap-2 bg-slate-900/90 p-2 rounded-xl border border-slate-800 shadow-2xl backdrop-blur-md">
+            <input type="text" id="inputCautare" placeholder="Ce cauți în Brăila? (ex: roșii, mecanic, pește...)" class="w-full bg-transparent px-4 py-2 text-white placeholder-slate-500 focus:outline-none text-sm">
+            <button class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2 rounded-lg text-sm transition shadow-lg shrink-0">
+                Caută
+            </button>
+        </div>
+
+        <!-- CATEGORII -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-3xl mt-10">
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">🍅</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">Producători & Legume</span>
+            </div>
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">🐟</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">Pește & Dunăre</span>
+            </div>
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">🔧</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">Auto & Mecanică</span>
+            </div>
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">🍕</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">HoReCa & Cazare</span>
+            </div>
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">💊</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">Farmacii & Sănătate</span>
+            </div>
+            <div class="bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 p-3.5 rounded-xl text-center transition cursor-pointer group">
+                <span class="text-2xl block mb-1">🏠</span>
+                <span class="text-xs font-medium text-slate-300 group-hover:text-amber-400">Meseriași & Servicii</span>
+            </div>
+        </div>
+
+        <!-- LISTA ANUNȚURILOR REALE (Aici vor veni datele din MongoDB) -->
+        <div class="w-full max-w-3xl mt-14 text-left">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center justify-between">
+                <span>Anunțuri Recente în Brăila</span>
+                <span class="text-xs text-slate-500 font-normal">Actualizat live</span>
+            </h2>
+            <div id="listaAnunturi" class="space-y-3">
+                <!-- Aici se vor încărca dinamic anunțurile din baza de date -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL ADĂUGARE ANUNȚ (ASCUNS INIȚIAL) -->
+    <div id="modalAnunt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <h3 class="text-lg font-bold text-white mb-1">Adaugă Anunț Nou</h3>
+            <p class="text-xs text-slate-400 mb-4">Maximum 10 anunțuri active per număr de telefon.</p>
+            
+            <form id="formAdaugare" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Număr de Telefon (pentru verificare limită)</label>
+                    <input type="tel" id="telefonUser" required placeholder="ex: 0712345678" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Categorie</label>
+                    <select id="categorieUser" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                        <option value="Producători & Legume">Producători & Legume</option>
+                        <option value="Pește & Dunăre">Pește & Dunăre</option>
+                        <option value="Auto & Mecanică">Auto & Mecanică</option>
+                        <option value="HoReCa & Cazare">HoReCa & Cazare</option>
+                        <option value="Farmacii & Sănătate">Farmacii & Sănătate</option>
+                        <option value="Meseriași & Servicii">Meseriași & Servicii</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Titlu Anunț / Produs</label>
+                    <input type="text" id="titluUser" required placeholder="ex: Pește proaspăt somn / Schimb ulei" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Detalii și Preț</label>
+                    <input type="text" id="detaliiUser" required placeholder="ex: 20 lei/kg, zona Viziru" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="inchideModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition">
+                        Anulează
+                    </button>
+                    <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold py-2.5 rounded-xl transition">
+                        Publică Instant
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
+        <p>&copy; 2026 Brăila Hub. Comunitate independentă locală.</p>
+    </footer>
+
+    <!-- SCRIPTURI CONTROL INTERFAȚĂ ȘI BAZĂ DE DATE -->
+    <script>
+        const API_URL = 'http://localhost:5000/api/anunturi';
+
+        function deschideModal() {
+            document.getElementById('modalAnunt').classList.remove('hidden');
+            document.getElementById('modalAnunt').classList.add('flex');
+        }
+        function inchideModal() {
+            document.getElementById('modalAnunt').classList.remove('flex');
+            document.getElementById('modalAnunt').classList.add('hidden');
+        }
+
+        // 1. Funcție pentru a încărca anunțurile de pe serverul Node.js
+        async function incarcaAnunturi() {
+            try {
+                const raspuns = await fetch(API_URL);
+                const anunturi = await raspuns.json();
+                
+                const lista = document.getElementById('listaAnunturi');
+                lista.innerHTML = '';
+
+                if (anunturi.length === 0) {
+                    lista.innerHTML = '<p class="text-xs text-slate-500">Nu există anunțuri publicate momentan. Fii primul!</p>';
+                    return;
+                }
+
+                anunturi.forEach(anunt => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900/40 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between gap-3";
+                    card.innerHTML = `
+                        <div>
+                            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-semibold px-2.5 py-0.5 rounded uppercase">${anunt.categorie}</span>
+                            <h3 class="font-bold text-white mt-1">${anunt.titlu}</h3>
+                            <p class="text-xs text-slate-400 mt-1">${anunt.detalii}</p>
+                        </div>
+                        <div class="flex items-center gap-2 self-start sm:self-center">
+                            <a href="tel:${anunt.telefon}" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                                📞 Sună (${anunt.telefon})
+                            </a>
+                        </div>
+                    `;
+                    lista.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Eroare la preluarea anunțurilor:", error);
+            }
+        }
+
+        // 2. Gestionarea trimiterii formularului de adăugare anunț spre MongoDB
+        document.getElementById('formAdaugare').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const telefon = document.getElementById('telefonUser').value;
+            const categorie = document.getElementById('categorieUser').value;
+            const titlu = document.getElementById('titluUser').value;
+            const detalii = document.getElementById('detaliiUser').value;
+
+            try {
+                const raspuns = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telefon, categorie, titlu, detalii })
+                });
+
+                const rezultat = await raspuns.json();
+
+                if (raspuns.ok) {
+                    alert(rezultat.mesaj);
+                    inchideModal();
+                    document.getElementById('formAdaugare').reset();
+                    incarcaAnunturi(); // Reîncărcăm lista live
+                } else {
+                    alert(rezultat.mesaj); // Aici te va atenționa dacă ai depășit limita de 10 anunțuri
+                }
+            } catch (error) {
+                console.error("Eroare la adăugare:", error);
+                alert("Eroare de conexiune cu serverul.");
+            }
+        });
+
+        // La încărcarea paginii, aducem anunțurile existente
+        window.onload = incarcaAnunturi;
+    </script>
+
+</body>
+</html>
