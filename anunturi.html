@@ -24,16 +24,15 @@
 
     <!-- MODAL AUTENTIFICARE / INTRODUCERE -->
     <div id="modalAuth" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 md:p-8 rounded-2xl shadow-2xl relative">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 md:p-8 rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-black text-white mb-2 text-center">Bun venit la Brăila Hub!</h2>
             
-            <!-- Textul adaptat conform cerinței tale -->
             <p class="text-xs text-slate-300 mb-6 text-center leading-relaxed bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
                 <strong>Ce este Brăila Hub?</strong> Este locul de întâlnire online al brăilenilor. Aici găsești sau poți publica rapid anunțuri locale gratuite: de la legume proaspete de la producători, pește din Dunăre, haine și încălțăminte, telefoane și internet, transport (taxi, Bolt, Uber), florării, electricieni, până la locuri de muncă, auto, servicii, medicale și HoReCa. Totul simplu, direct între localnici, fără intermediari!
             </p>
 
             <h3 id="titluAuth" class="text-lg font-bold text-white mb-1 text-center">Înscrie-te în Comunitate</h3>
-            <p id="subtitluAuth" class="text-xs text-slate-400 mb-4 text-center">Creează-ți un cont rapid pentru a publica anunțuri (maxim 5 pe lună).</p>
+            <p id="subtitluAuth" class="text-xs text-slate-400 mb-4 text-center">Creează-ți un cont sigur pentru a publica anunțuri (maxim 5 pe lună).</p>
             
             <form id="formAuth" onsubmit="gestioneazaAuth(event)" class="space-y-3">
                 <div id="divNume">
@@ -46,7 +45,10 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Parolă</label>
-                    <input type="password" id="authParola" required placeholder="Parolă cont" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    <div class="relative">
+                        <input type="password" id="authParola" required placeholder="Parolă cont" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200 pr-10">
+                        <button type="button" onclick="toggleParola('authParola', this)" class="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-amber-400 font-bold">👁️</button>
+                    </div>
                 </div>
                 <button type="submit" id="btnSubmitAuth" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg text-sm mt-2">
                     Creează Cont / Continuă
@@ -134,7 +136,7 @@
             </button>
         </div>
 
-        <!-- GRID TOATE CATEGORIILE (Inclusiv cele noi adăugate) -->
+        <!-- GRID TOATE CATEGORIILE -->
         <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <div onclick="filtreazaCategorie('Producători & Legume')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🍅</span>
@@ -194,17 +196,26 @@
         <div id="listaAnunturi" class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
-    <!-- MODAL ADAUTARE ANUNT -->
+    <!-- MODAL ADAUTARE ANUNT MODERNIZAT -->
     <div id="modalAnunt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 md:p-8 rounded-2xl shadow-2xl relative my-8">
             <h2 class="text-xl font-bold text-white mb-1">Adaugă Anunț Nou (Max 5 / lună)</h2>
-            <form id="formAdaugaAnunt" onsubmit="trimiteAnunt(event)" class="space-y-4 mt-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Număr de Telefon</label>
-                    <input type="tel" id="telefonAnunt" required minlength="10" placeholder="07xxxxxxxx" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+            <p class="text-xs text-slate-400 mb-4">Completează datele specifice afacerii sau ofertei tale locale.</p>
+            
+            <form id="formAdaugaAnunt" onsubmit="trimiteAnunt(event)" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Număr de Telefon *</label>
+                        <input type="tel" id="telefonAnunt" required minlength="10" placeholder="07xxxxxxxx" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Email (Opțional)</label>
+                        <input type="email" id="emailAnunt" placeholder="contact@exemplu.ro" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Categorie</label>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Categorie *</label>
                     <select id="categorieAnunt" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                         <option value="Producători & Legume">🍅 Producători & Legume</option>
                         <option value="Pește & Produse Locale">🐟 Pește & Produse Locale</option>
@@ -220,22 +231,42 @@
                         <option value="HoReCa & Cazare">🏨 HoReCa & Cazare</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Titlu Anunț</label>
-                    <input type="text" id="titluAnunt" required placeholder="Ex: Vând haine / Angajez șofer" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nume Magazin / Firmă (Opțional)</label>
+                        <input type="text" id="numeMagazinAnunt" placeholder="Ex: Magazinul Ana / PFA Ion" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Preț (în Lei) *</label>
+                        <div class="relative">
+                            <input type="text" id="pretAnunt" required placeholder="Ex: 50" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200 pr-12">
+                            <span class="absolute right-3 top-2.5 text-xs text-amber-400 font-bold">LEI</span>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Preț</label>
-                    <input type="text" id="pretAnunt" required placeholder="Ex: 50 lei" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
-                </div>
+
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="cartierAnunt" required placeholder="Cartier (ex: Dorobanți)" class="bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
-                    <input type="text" id="stradaAnunt" required placeholder="Stradă & Nr." class="bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Cartier *</label>
+                        <input type="text" id="cartierAnunt" required placeholder="Ex: Dorobanți" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Stradă & Număr *</label>
+                        <input type="text" id="stradaAnunt" required placeholder="Ex: Str. Griviței nr. 12" class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Detalii Suplimentare</label>
-                    <textarea id="detaliiAnunt" required rows="3" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200"></textarea>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Titlu Anunț *</label>
+                    <input type="text" id="titluAnunt" required placeholder="Ex: Vând roșii proaspete / Închiriez apartament" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Detalii / Specificații Suplimentare *</label>
+                    <textarea id="detaliiAnunt" required rows="3" placeholder="Scrie detalii despre produs, program sau servicii..." class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200"></textarea>
+                </div>
+
                 <div class="flex space-x-3 pt-2">
                     <button type="button" onclick="inchideModalAnunt()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-sm">Anulează</button>
                     <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Publică Instant</button>
@@ -283,6 +314,17 @@
             document.getElementById('radioLocal').volume = valoare;
         }
 
+        function toggleParola(idInput, btn) {
+            const input = document.getElementById(idInput);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerText = "🔒";
+            } else {
+                input.type = "password";
+                btn.innerText = "👁️";
+            }
+        }
+
         function calculeazaSiAfiseazaAbonati() {
             let ab = localStorage.getItem('brailaHubAbonati');
             if (!ab) {
@@ -307,6 +349,7 @@
         function schimbaModAuth() {
             esteInregistrare = !esteInregistrare;
             document.getElementById('titluAuth').innerText = esteInregistrare ? "Creează un Cont Nou" : "Înscrie-te în Comunitate";
+            document.getElementById('subtitluAuth').innerText = esteInregistrare ? "Introdu o parolă sigură pentru noul tău cont." : "Creează-ți un cont sigur pentru a publica anunțuri (maxim 5 pe lună).";
             document.getElementById('btnSubmitAuth').innerText = esteInregistrare ? "Înregistrează-te și Continuă" : "Creează Cont / Continuă";
             document.getElementById('comutatorAuthText').innerText = esteInregistrare ? "Ai deja cont? Autentifică-te" : "Nu ai cont? Înregistrează-te";
         }
@@ -321,8 +364,14 @@
             const nume = document.getElementById('authNume').value || "Membru Brăila";
             const parola = document.getElementById('authParola').value;
 
+            if(parola.length < 4) {
+                alert("Parola trebuie să conțină cel puțin 4 caractere.");
+                return;
+            }
+
             localStorage.setItem('brailaHubUser', JSON.stringify({ nume, contact }));
             document.getElementById('modalAuth').classList.add('hidden');
+            document.getElementById('modalAnunt').classList.remove('hidden');
         }
 
         function inchideModalAnunt() {
@@ -356,13 +405,17 @@
                     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                         <div>
                             <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
-                            <h3 class="text-lg font-bold text-white mt-2 mb-1">${a.titlu}</h3>
-                            <p class="text-emerald-400 font-extrabold text-sm mb-2">Preț: ${a.pret}</p>
+                            ${a.numeMagazin ? `<p class="text-xs text-amber-300 font-semibold mt-2">🏪 ${a.numeMagazin}</p>` : ''}
+                            <h3 class="text-lg font-bold text-white mt-1 mb-1">${a.titlu}</h3>
+                            <p class="text-emerald-400 font-extrabold text-sm mb-2">Preț: ${a.pret} LEI</p>
                             <p class="text-slate-300 text-xs">${a.detalii}</p>
                         </div>
-                        <div class="border-t border-slate-800/80 pt-3 mt-4 text-xs text-slate-400 flex justify-between">
+                        <div class="border-t border-slate-800/80 pt-3 mt-4 text-xs text-slate-400 flex flex-col gap-1">
                             <span>📍 Cartier: ${a.cartier}, ${a.strada}</span>
-                            <a href="tel:${a.telefon}" class="text-emerald-400 font-bold">📞 ${a.telefon}</a>
+                            <div class="flex justify-between items-center">
+                                <a href="tel:${a.telefon}" class="text-emerald-400 font-bold">📞 ${a.telefon}</a>
+                                ${a.email ? `<a href="mailto:${a.email}" class="text-amber-400">✉️ Email</a>` : ''}
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -373,6 +426,8 @@
             e.preventDefault();
             const date = {
                 telefon: document.getElementById('telefonAnunt').value,
+                email: document.getElementById('emailAnunt').value,
+                numeMagazin: document.getElementById('numeMagazinAnunt').value,
                 categorie: document.getElementById('categorieAnunt').value,
                 titlu: document.getElementById('titluAnunt').value,
                 pret: document.getElementById('pretAnunt').value,
