@@ -22,13 +22,20 @@
         <source src="https://stream.zeno.fm/f3wvbbqmdg8uv" type="audio/mpeg">
     </audio>
 
-    <!-- MODAL AUTENTIFICARE (Se deschide DOAR la adăugare dacă nu ești logat) -->
-    <div id="modalAuth" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 md:p-8 rounded-2xl shadow-2xl relative">
-            <h2 id="titluAuth" class="text-2xl font-black text-white mb-1 text-center">Cont Necesar</h2>
-            <p id="subtitluAuth" class="text-xs text-slate-400 mb-6 text-center">Pentru a publica un anunț în Brăila Hub, este nevoie de un cont rapid (maxim 5 anunțuri / lună).</p>
+    <!-- MODAL AUTENTIFICARE / INTRODUCERE -->
+    <div id="modalAuth" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 md:p-8 rounded-2xl shadow-2xl relative">
+            <h2 class="text-2xl font-black text-white mb-2 text-center">Bun venit la Brăila Hub!</h2>
             
-            <form id="formAuth" onsubmit="gestioneazaAuth(event)" class="space-y-4">
+            <!-- Textul adaptat conform cerinței tale -->
+            <p class="text-xs text-slate-300 mb-6 text-center leading-relaxed bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
+                <strong>Ce este Brăila Hub?</strong> Este locul de întâlnire online al brăilenilor. Aici găsești sau poți publica rapid anunțuri locale gratuite: de la legume proaspete de la producători, pește din Dunăre, haine și încălțăminte, telefoane și internet, transport (taxi, Bolt, Uber), florării, electricieni, până la locuri de muncă, auto, servicii, medicale și HoReCa. Totul simplu, direct între localnici, fără intermediari!
+            </p>
+
+            <h3 id="titluAuth" class="text-lg font-bold text-white mb-1 text-center">Înscrie-te în Comunitate</h3>
+            <p id="subtitluAuth" class="text-xs text-slate-400 mb-4 text-center">Creează-ți un cont rapid pentru a publica anunțuri (maxim 5 pe lună).</p>
+            
+            <form id="formAuth" onsubmit="gestioneazaAuth(event)" class="space-y-3">
                 <div id="divNume">
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Nume și Prenume</label>
                     <input type="text" id="authNume" placeholder="Ex: Ion Popescu" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
@@ -42,13 +49,13 @@
                     <input type="password" id="authParola" required placeholder="Parolă cont" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
                 </div>
                 <button type="submit" id="btnSubmitAuth" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg text-sm mt-2">
-                    Creează Cont și Publică
+                    Creează Cont / Continuă
                 </button>
             </form>
 
             <div class="flex justify-between items-center mt-4 text-xs">
-                <button onclick="schimbaModAuth()" id="comutatorAuthText" class="text-amber-400 hover:underline">Ai deja cont? Autentifică-te</button>
-                <button onclick="inchideModalAuth()" class="text-slate-500 hover:text-slate-300">Anulează</button>
+                <button type="button" onclick="schimbaModAuth()" id="comutatorAuthText" class="text-amber-400 hover:underline">Ai deja cont? Autentifică-te</button>
+                <button type="button" onclick="sariPesteAuth()" class="text-slate-400 hover:text-white font-semibold">Sari peste și mergi direct la Platformă →</button>
             </div>
         </div>
     </div>
@@ -96,10 +103,10 @@
         </div>
     </div>
 
-    <!-- CONTINUT PRINCIPAL & DESCRIERE PLATFORMĂ -->
+    <!-- CONTINUT PRINCIPAL -->
     <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow relative z-10 flex flex-col items-center">
         
-        <!-- CEASUL DIN PIAȚA TRAIAN (Repere Locale) -->
+        <!-- CEASUL DIN PIAȚA TRAIAN -->
         <div class="w-36 h-36 rounded-full border-2 border-amber-500/60 flex flex-col items-center justify-center bg-slate-950/90 shadow-[0_0_30px_rgba(245,158,11,0.25)] mb-6 text-center p-3 relative overflow-hidden">
             <div class="absolute inset-0 opacity-40 bg-cover bg-center" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e6/Ceasul_din_Pia%C8%9Ba_Traian_din_Br%C4%83ila.jpg');"></div>
             <div class="relative z-10 flex flex-col items-center justify-center h-full">
@@ -118,21 +125,16 @@
         <h2 class="text-3xl md:text-5xl font-black text-center text-white mb-3 tracking-tight">
             Totul în Brăila, la un click distanță
         </h2>
-        
-        <!-- DESCRIEREA CLARĂ A SITE-ULUI PENTRU VIZITATORI -->
-        <p class="text-slate-300 text-xs md:text-sm text-center max-w-2xl mb-8 leading-relaxed bg-slate-900/60 border border-slate-800 p-4 rounded-2xl">
-            <strong>Ce este Brăila Hub?</strong> Este locul de întâlnire online al brăilenilor. Aici găsești sau poți publica rapid anunțuri locale gratuite: de la legume proaspete de la producătorii din județ, pește din Dunăre, piese auto și servicii, până la recomandări medicale și HoReCa. Totul simplu, direct între localnici, fără intermediari!
-        </p>
 
         <!-- CĂUTARE & FILTRE -->
         <div class="w-full max-w-3xl flex flex-col md:flex-row gap-3 mb-8">
-            <input type="text" id="inputCautare" oninput="incarcaAnunturi()" placeholder="Caută roșii, pește proaspăt, servicii, auto..." class="flex-grow bg-slate-900/90 px-5 py-3.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200 shadow-md">
+            <input type="text" id="inputCautare" oninput="incarcaAnunturi()" placeholder="Caută haine, transport, loc de muncă, pește..." class="flex-grow bg-slate-900/90 px-5 py-3.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200 shadow-md">
             <button onclick="incarcaAnunturi()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 py-3.5 rounded-xl transition text-sm shadow-lg shadow-amber-500/20">
                 Caută
             </button>
         </div>
 
-        <!-- GRID CATEGORII EXTINSE (FUNCȚIONALE) -->
+        <!-- GRID TOATE CATEGORIILE (Inclusiv cele noi adăugate) -->
         <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <div onclick="filtreazaCategorie('Producători & Legume')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🍅</span>
@@ -145,6 +147,30 @@
             <div onclick="filtreazaCategorie('Auto, Mecanică & Piese')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🔧</span>
                 <h3 class="font-bold text-white text-sm">Auto, Mecanică & Piese</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Magazine de Îmbrăcăminte și Încălțăminte')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">👕</span>
+                <h3 class="font-bold text-white text-sm">Magazine de Îmbrăcăminte și Încălțăminte</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Telefoane & Internet')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">📱</span>
+                <h3 class="font-bold text-white text-sm">Telefoane & Internet</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Transport în comun, Taxi, Bolt, Uber')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">🚕</span>
+                <h3 class="font-bold text-white text-sm">Transport în comun, Taxi, Bolt, Uber</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Florării și Grădinărit')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">🌷</span>
+                <h3 class="font-bold text-white text-sm">Florării și Grădinărit</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Electricieni și Electrocasnice')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">⚡</span>
+                <h3 class="font-bold text-white text-sm">Electricieni și Electrocasnice</h3>
+            </div>
+            <div onclick="filtreazaCategorie('Locuri de Muncă: Cereri și Oferte')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
+                <span class="text-3xl mb-2">💼</span>
+                <h3 class="font-bold text-white text-sm">Locuri de Muncă: Cereri și Oferte</h3>
             </div>
             <div onclick="filtreazaCategorie('Magazine Alimentare')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🛒</span>
@@ -183,6 +209,12 @@
                         <option value="Producători & Legume">🍅 Producători & Legume</option>
                         <option value="Pește & Produse Locale">🐟 Pește & Produse Locale</option>
                         <option value="Auto, Mecanică & Piese">🔧 Auto, Mecanică & Piese</option>
+                        <option value="Magazine de Îmbrăcăminte și Încălțăminte">👕 Magazine de Îmbrăcăminte și Încălțăminte</option>
+                        <option value="Telefoane & Internet">📱 Telefoane & Internet</option>
+                        <option value="Transport în comun, Taxi, Bolt, Uber">🚕 Transport în comun, Taxi, Bolt, Uber</option>
+                        <option value="Florării și Grădinărit">🌷 Florării și Grădinărit</option>
+                        <option value="Electricieni și Electrocasnice">⚡ Electricieni și Electrocasnice</option>
+                        <option value="Locuri de Muncă: Cereri și Oferte">💼 Locuri de Muncă: Cereri și Oferte</option>
                         <option value="Magazine Alimentare">🛒 Magazine Alimentare</option>
                         <option value="Cabinete Medicale & Farmacii">💊 Cabinete Medicale & Farmacii</option>
                         <option value="HoReCa & Cazare">🏨 HoReCa & Cazare</option>
@@ -190,11 +222,11 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Titlu Anunț</label>
-                    <input type="text" id="titluAnunt" required placeholder="Ex: Vând roșii de grădină" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    <input type="text" id="titluAnunt" required placeholder="Ex: Vând haine / Angajez șofer" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Preț</label>
-                    <input type="text" id="pretAnunt" required placeholder="Ex: 15 lei" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    <input type="text" id="pretAnunt" required placeholder="Ex: 50 lei" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <input type="text" id="cartierAnunt" required placeholder="Cartier (ex: Dorobanți)" class="bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
@@ -263,23 +295,24 @@
             document.getElementById('infoAbonatiEcran').innerText = `👥 ${ab} Abonați în Comunitate`;
         }
 
-        // Verifică dacă utilizatorul este logat înainte de a deschide formularul de anunț
         function incearcaAdaugareAnunt() {
             const userSalvat = localStorage.getItem('brailaHubUser');
             if (!userSalvat) {
-                // Dacă nu are cont, se deschide fereastra de înregistrare obligatorie
                 document.getElementById('modalAuth').classList.remove('hidden');
             } else {
-                // Dacă are cont, i se dă voie direct să adauge anunțul
                 document.getElementById('modalAnunt').classList.remove('hidden');
             }
         }
 
         function schimbaModAuth() {
             esteInregistrare = !esteInregistrare;
-            document.getElementById('titluAuth').innerText = esteInregistrare ? "Creează un Cont Nou" : "Cont Necesar";
-            document.getElementById('btnSubmitAuth').innerText = esteInregistrare ? "Înregistrează-te și Publică" : "Autentifică-te";
+            document.getElementById('titluAuth').innerText = esteInregistrare ? "Creează un Cont Nou" : "Înscrie-te în Comunitate";
+            document.getElementById('btnSubmitAuth').innerText = esteInregistrare ? "Înregistrează-te și Continuă" : "Creează Cont / Continuă";
             document.getElementById('comutatorAuthText').innerText = esteInregistrare ? "Ai deja cont? Autentifică-te" : "Nu ai cont? Înregistrează-te";
+        }
+
+        function sariPesteAuth() {
+            document.getElementById('modalAuth').classList.add('hidden');
         }
 
         async function gestioneazaAuth(e) {
@@ -288,13 +321,7 @@
             const nume = document.getElementById('authNume').value || "Membru Brăila";
             const parola = document.getElementById('authParola').value;
 
-            // Salvăm utilizatorul local și îl lăsăm să publice
             localStorage.setItem('brailaHubUser', JSON.stringify({ nume, contact }));
-            document.getElementById('modalAuth').classList.add('hidden');
-            document.getElementById('modalAnunt').classList.remove('hidden');
-        }
-
-        function inchideModalAuth() {
             document.getElementById('modalAuth').classList.add('hidden');
         }
 
