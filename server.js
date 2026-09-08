@@ -6,8 +6,6 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
-
-// Servim fișierele statice din folderul curent
 app.use(express.static(path.join(__dirname)));
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://iulianpopa433_db_user:z0x1hJYhOAFOqjWG@cluster0-shard-00-00.t6io4vq.mongodb.net:27017,cluster0-shard-00-01.t6io4vq.mongodb.net:27017,cluster0-shard-00-02.t6io4vq.mongodb.net:27017/brailahub?ssl=true&replicaSet=atlas-t6io4vq-shard-0&authSource=admin&retryWrites=true&w=majority';
@@ -21,35 +19,39 @@ mongoose.connect(MONGO_URI, {
     .then(() => console.log("Conectat cu succes la MongoDB Atlas pentru Brăila Hub!"))
     .catch((err) => console.error("Eroare de conectare la MongoDB:", err));
 
-// Schema pentru Anunțuri (cu preț, cartier separat și ștergere automată la 30 zile)
 const anuntSchema = new mongoose.Schema({
     telefon: { type: String, required: true },
     categorie: { type: String, required: true },
+    denumire: { type: String, default: '' },
     titlu: { type: String, required: true },
     pret: { type: String, required: true },
     cartier: { type: String, required: true },
     strada: { type: String, required: true },
+    numarStrada: { type: String, default: '' },
     detalii: { type: String, required: true },
     dataCreare: { type: Date, default: Date.now, expires: '30d' }
 });
 
 const Anunt = mongoose.model('Anunt', anuntSchema);
 
-// Ruta pentru preluarea anunțurilor (suportă căutare și filtru după cartier)
+// Preluare anunțuri (cu filtru de căutare sau cartier)
 app.get('/api/anunturi', async (req, res) => {
     try {
-        const { cautare, cartier } = req.query;
+        const { cautare, cartier, telefon } = req.query;
         let query = {};
 
+        if (telefon) {
+            query.telefon = telefon;
+        }
         if (cartier) {
             query.cartier = { $regex: cartier, $options: 'i' };
         }
-
         if (cautare) {
             query.$or = [
                 { titlu: { $regex: cautare, $options: 'i' } },
                 { detalii: { $regex: cautare, $options: 'i' } },
-                { categorie: { $regex: cautare, $options: 'i' } }
+                { categorie: { $regex: cautare, $options: 'i' } },
+                { denumire: { $regex: cautare, $options: 'i' } }
             ];
         }
 
@@ -60,10 +62,10 @@ app.get('/api/anunturi', async (req, res) => {
     }
 });
 
-// Ruta pentru adăugarea unui anunț nou (limita de 5 pe lună)
+// Adăugare anunț (cu limită de 5 pe lună)
 app.post('/api/anunturi', async (req, res) => {
     try {
-        const { telefon, categorie, titlu, pret, cartier, strada, detalii } = req.body;
+        const { telefon, categorie, denumire, titlu, pret, cartier, strada, numarStrada, detalii } = req.body;
 
         if (!telefon || !titlu || !pret || !cartier) {
             return res.status(400).json({ mesaj: "Telefonul, titlul, prețul și cartierul sunt obligatorii." });
@@ -83,12 +85,32 @@ app.post('/api/anunturi', async (req, res) => {
             });
         }
 
-        const anuntNou = new Anunt({ telefon, categorie, titlu, pret, cartier, strada, detalii });
+        const anuntNou = new Anunt({ 
+            telefon, 
+            categorie, 
+            denumire: denumire || '', 
+            titlu, 
+            pret, 
+            cartier, 
+            strada, 
+            numarStrada: numarStrada || '', 
+            detalii 
+        });
+        
         await anuntNou.save();
-
         res.status(201).json({ mesaj: "Anunțul a fost publicat cu succes!", anunt: anuntNou });
     } catch (error) {
         res.status(500).json({ mesaj: "Eroare la server privind salvarea anunțului" });
+    }
+});
+
+// Ștergere anunț propriu
+app.delete('/api/anunturi/:id', async (req, res) => {
+    try {
+        await Anunt.findByIdAndDelete(req.params.id);
+        res.json({ mesaj: "Anunțul a fost șters cu succes!" });
+    } catch (error) {
+        res.status(500).json({ mesaj: "Eroare la ștergerea anunțului" });
     }
 });
 
