@@ -7,23 +7,23 @@
     <title>Brăila Hub - Platforma Comunitară</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .bg-ceas-fundal {
-            background-image: linear-gradient(rgba(2, 6, 23, 0.92), rgba(2, 6, 23, 0.95)), url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1920&auto=format&fit=crop');
+        .bg-ceas-original {
+            background-image: linear-gradient(rgba(2, 6, 23, 0.88), rgba(2, 6, 23, 0.95)), url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1920&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between bg-ceas-fundal relative">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between bg-ceas-original relative">
     
-    <!-- RADIO LOCAL (Radio Brăila Dens FM) -->
+    <!-- RADIO LOCAL -->
     <audio id="radioLocal" loop>
-        <source src="https://live.radio-ro.com/stream" type="audio/mpeg">
+        <source src="https://stream.zeno.fm/f3wvbbqmdg8uv" type="audio/mpeg">
     </audio>
 
     <!-- HEADER -->
-    <header class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-45">
+    <header class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
         <div class="flex flex-col cursor-pointer" onclick="window.location.href='index.html'">
             <div class="flex items-center space-x-2">
                 <span class="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></span>
@@ -32,23 +32,26 @@
             <span class="text-[10px] text-amber-400 font-semibold tracking-wide ml-5">Creat în Brăila pentru brăileni</span>
         </div>
         
-        <!-- CONTROALE RADIO & BUTOANE SUS -->
+        <!-- CONTROALE SUS -->
         <div class="flex items-center space-x-3">
             <div class="hidden md:flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-                <span class="text-amber-400 font-bold">📻 Radio Brăila Dens FM:</span>
+                <span class="text-amber-400 font-bold">📻 Radio:</span>
                 <input type="range" id="volumRadio" min="0" max="1" step="0.1" value="0.2" onchange="schimbaVolum(this.value)" class="w-16 accent-amber-500 cursor-pointer">
                 <button onclick="toggleRadio()" id="btnRadio" class="text-amber-400 font-bold ml-1">Pornit</button>
             </div>
+            <button onclick="deschideChat()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-700 transition">
+                💬 Chat Brăileni
+            </button>
             <button onclick="deschideModalAnunt()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20">
                 + Adaugă Anunț
             </button>
         </div>
     </header>
 
-    <!-- CHAT FLOTANT DREAPTA SUS -->
-    <div id="chatFlotant" class="fixed top-20 right-6 w-80 bg-slate-900/95 border border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col h-[400px] backdrop-blur-md">
-        <div class="flex justify-between items-center bg-slate-950 px-4 py-3 border-b border-slate-800 rounded-t-2xl cursor-move">
-            <span class="font-bold text-amber-400 text-xs">💬 Chat Brăileni</span>
+    <!-- CHAT FLOTANT (Muzibil / Închideril / Mutabil) -->
+    <div id="chatFlotant" class="fixed bottom-6 right-6 w-80 bg-slate-900/95 border border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col h-[380px] backdrop-blur-md hidden">
+        <div id="chatHeader" class="flex justify-between items-center bg-slate-950 px-4 py-3 border-b border-slate-800 rounded-t-2xl cursor-grab select-none">
+            <span class="font-bold text-amber-400 text-xs">💬 Chat Brăileni (Trage de sus pentru a muta)</span>
             <div class="flex space-x-2">
                 <button onclick="minimizeazaChat()" class="text-slate-400 hover:text-white text-xs font-bold">_</button>
                 <button onclick="inchideChat()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
@@ -56,7 +59,7 @@
         </div>
         <div id="mesajeChatContainer" class="flex-grow overflow-y-auto p-3 space-y-2 text-xs">
             <div class="bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                <strong class="text-amber-400">Brăila Hub:</strong> Bine ați venit în chat-ul brăilenilor!
+                <strong class="text-amber-400">Brăila Hub:</strong> Bun venit în chat-ul brăilenilor!
             </div>
         </div>
         <div class="p-3 border-t border-slate-800 bg-slate-950/50 rounded-b-2xl flex gap-1">
@@ -69,8 +72,19 @@
     <!-- CONTINUT PRINCIPAL -->
     <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow relative z-10">
         
+        <!-- CEASUL DIN PIAȚA TRAIAN ÎN DECOR -->
+        <div class="flex items-center justify-center space-x-4 mb-8 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-sm shadow-xl">
+            <div class="w-14 h-14 rounded-full border-2 border-amber-500/60 flex items-center justify-center bg-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                <span class="text-2xl">🕰️</span>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-white">Piața Traian - Brăila</h2>
+                <p class="text-xs text-slate-400">Inima orașului nostru, prezentă în fiecare pas pe platformă.</p>
+            </div>
+        </div>
+
         <!-- CĂUTARE & FILTRE -->
-        <div class="flex flex-col md:flex-row gap-3 mb-6">
+        <div class="flex flex-col md:flex-row gap-3 mb-4">
             <input type="text" id="inputCautare" oninput="incarcaAnunturi()" placeholder="Caută anunțuri, locuri de muncă, pește proaspăt..." class="flex-grow bg-slate-900/90 px-4 py-3 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200 shadow-md">
             <select id="filtruCartier" onchange="incarcaAnunturi()" class="bg-slate-900/90 px-4 py-3 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-300 md:w-48 shadow-md">
                 <option value="">Toate cartierele</option>
@@ -87,7 +101,17 @@
             </select>
         </div>
 
-        <div class="flex justify-between items-center mb-6 bg-slate-900/80 p-4 rounded-xl border border-slate-800 shadow-md backdrop-blur-sm">
+        <!-- PAGINA / BUTOANELE CU TOATE CATEGORIILE -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="filtreazaCategorie('')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">📋 Toate Categoriile</button>
+            <button onclick="filtreazaCategorie('Locuri de Muncă')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">💼 Locuri de Muncă</button>
+            <button onclick="filtreazaCategorie('Pește Proaspăt')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">🐟 Pește Proaspăt</button>
+            <button onclick="filtreazaCategorie('Producători Locali')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">🍅 Producători Locali</button>
+            <button onclick="filtreazaCategorie('Servicii')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">🔧 Servicii & Meseriași</button>
+            <button onclick="filtreazaCategorie('Diverse')" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-800 transition">📦 Diverse</button>
+        </div>
+
+        <div class="flex justify-between items-center mb-6 bg-slate-900/85 p-4 rounded-xl border border-slate-800 shadow-md backdrop-blur-sm">
             <span class="text-xs text-slate-400">💡 Anunțurile se șterg automat după 30 de zile. Maxim 5 active pe număr.</span>
             <button onclick="arataAnunturileMele()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 transition">
                 📁 Anunțurile mele publicate
@@ -115,18 +139,17 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Categorie</label>
                     <select id="categorieAnunt" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
-                        <option value="Locuri de Muncă (Oferte & Cereri)">💼 Locuri de Muncă (Oferte & Cereri)</option>
-                        <option value="Pește Proaspăt & Dunăre">🐟 Pește Proaspăt & Dunăre</option>
-                        <option value="Producători Locali & Legume">🍅 Producători Locali & Legume</option>
-                        <option value="Magazine Alimentare">🛒 Magazine Alimentare</option>
-                        <option value="Servicii & Meseriași">🔧 Servicii & Meseriași</option>
-                        <option value="Transport & Auto">🚕 Transport & Auto</option>
+                        <option value="Locuri de Muncă">💼 Locuri de Muncă (Oferte & Cereri)</option>
+                        <option value="Pește Proaspăt">🐟 Pește Proaspăt & Dunăre</option>
+                        <option value="Producători Locali">🍅 Producători Locali & Legume</option>
+                        <option value="Magazine">🛒 Magazine Alimentare</option>
+                        <option value="Servicii">🔧 Servicii & Meseriași</option>
                         <option value="Diverse">📦 Diverse</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Denumire Producător / Firmă / Magazin (Opțional)</label>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Denumire Producător / Firmă (Opțional)</label>
                     <input type="text" id="denumireAnunt" placeholder="Ex: SC Pescăria Brăileana SRL" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
                 </div>
 
@@ -216,6 +239,8 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             incarcaAnunturi();
+            deschideChat(); // Deschide chat-ul vizibil din start
+            
             const savedUser = localStorage.getItem('brailaHubUser');
             if (savedUser) {
                 try {
@@ -224,14 +249,45 @@
                     if (user.nume) document.getElementById('numeChat').value = user.nume;
                 } catch(e) {}
             }
+            activeazaMutareChat();
         });
 
         function deschideModalAnunt() { document.getElementById('modalAnunt').classList.remove('hidden'); }
         function inchideModalAnunt() { document.getElementById('modalAnunt').classList.add('hidden'); }
-        function inchideChat() { document.getElementById('chatFlotant').style.display = 'none'; }
+        function deschideChat() { document.getElementById('chatFlotant').classList.remove('hidden'); }
+        function inchideChat() { document.getElementById('chatFlotant').classList.add('hidden'); }
+        
         function minimizeazaChat() {
             const cont = document.getElementById('mesajeChatContainer');
             cont.style.display = cont.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Posibilitate mutare chat pe ecran (Drag & Drop)
+        function activeazaMutareChat() {
+            const chat = document.getElementById('chatFlotant');
+            const header = document.getElementById('chatHeader');
+            let isDragging = false, startX, startY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - chat.offsetLeft;
+                startY = e.clientY - chat.offsetTop;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                chat.style.left = (e.clientX - startX) + 'px';
+                chat.style.top = (e.clientY - startY) + 'px';
+                chat.style.bottom = 'auto';
+                chat.style.right = 'auto';
+            });
+
+            document.addEventListener('mouseup', () => { isDragging = false; });
+        }
+
+        function filtreazaCategorie(cat) {
+            document.getElementById('inputCautare').value = cat;
+            incarcaAnunturi();
         }
 
         async function incarcaAnunturi(filtruTelefon = null) {
