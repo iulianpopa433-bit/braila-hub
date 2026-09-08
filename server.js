@@ -11,7 +11,6 @@ app.use(cors());
 app.use(express.static(__dirname));
 
 // --- CONEXIUNE MONGODB ---
-// Asigură-te că ai variabila de mediu MONGO_URI configurată în Render sau pune link-ul direct
 const MONGO_URI = process.env.MONGO_URI || "LINK_UL_TAU_MONGODB"; 
 
 mongoose.connect(MONGO_URI)
@@ -19,7 +18,7 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("Eroare conectare MongoDB:", err));
 
 // ==========================================
-// 1. MODEL ȘI RUTE PENTRU UTILIZATORI (AUTENTIFICARE & VIZITE)
+// 1. MODEL ȘI RUTE PENTRU UTILIZATORI (AUTENTIFICARE CU PAROLĂ)
 // ==========================================
 const userSchema = new mongoose.Schema({
     nume: { type: String, required: true },
@@ -52,7 +51,7 @@ app.post('/api/inregistrare', async (req, res) => {
     }
 });
 
-// Autentificare (Login) și creștere număr vizite
+// Autentificare (Login) cu parolă
 app.post('/api/login', async (req, res) => {
     try {
         const { contact, parola } = req.body;
@@ -62,7 +61,6 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ mesaj: "Date de autentificare incorecte (Email/Telefon sau Parolă greșită)!" });
         }
 
-        // Incrementăm numărul de vizite la fiecare autentificare reușită
         user.vizite += 1;
         await user.save();
 
@@ -120,7 +118,6 @@ app.post('/api/anunturi', async (req, res) => {
             return res.status(400).json({ mesaj: "Te rugăm să introduci un număr de telefon valid (minim 10 cifre)." });
         }
 
-        // Verificăm câte anunțuri active are acest număr de telefon (limita de 5)
         const anunturiExistente = await Anunt.countDocuments({ telefon });
         if (anunturiExistente >= 5) {
             return res.status(400).json({ mesaj: "Ai atins limita maximă de 5 anunțuri active pentru acest număr de telefon." });
@@ -146,7 +143,7 @@ app.post('/api/anunturi', async (req, res) => {
 
 
 // ==========================================
-// 3. RUTE PENTRU CHAT (OPȚIONAL / SUPORT)
+// 3. RUTE PENTRU CHAT
 // ==========================================
 const mesajSchema = new mongoose.Schema({
     nume: String,
@@ -176,7 +173,6 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-// Pornire server pe portul alocat de Render sau 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Serverul rulează pe portul ${PORT}`);
