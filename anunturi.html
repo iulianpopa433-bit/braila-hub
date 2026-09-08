@@ -22,6 +22,47 @@
         <source src="https://stream.zeno.fm/f3wvbbqmdg8uv" type="audio/mpeg">
     </audio>
 
+    <!-- MODAL AUTENTIFICARE / ÎNREGISTRARE (OBLIGATORIU LA INTRARE) -->
+    <div id="modalAuth" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 md:p-8 rounded-2xl shadow-2xl relative">
+            <h2 id="titluAuth" class="text-2xl font-black text-white mb-1 text-center">Bine ai venit pe Brăila Hub</h2>
+            <p id="subtitluAuth" class="text-xs text-slate-400 mb-6 text-center">Autentifică-te sau creează un cont pentru a continua.</p>
+            
+            <!-- FORMULAR LOGIN / REGISTER -->
+            <div id="formContainer">
+                <form id="formAuth" onsubmit="gestioneazaAuth(event)" class="space-y-4">
+                    <div id="divNume" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nume Utilizator</label>
+                        <input type="text" id="authNume" placeholder="Numele tău" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Email sau Număr de Telefon</label>
+                        <input type="text" id="authContact" required placeholder="07xxxxxxxx sau email@exemplu.com" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Parolă Setată</label>
+                        <input type="password" id="authParola" required placeholder="••••••••" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    </div>
+                    <button type="submit" id="btnSubmitAuth" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg text-sm mt-2">
+                        Autentificare
+                    </button>
+                </form>
+
+                <div class="flex justify-between items-center mt-4 text-xs">
+                    <button onclick="schimbaModAuth()" id="comutatorAuthText" class="text-amber-400 hover:underline">Nu ai cont? Înregistrează-te</button>
+                    <button onclick="deconectareUser()" class="text-slate-500 hover:text-slate-300">Ieși</button>
+                </div>
+            </div>
+
+            <!-- PORTIȚĂ MICĂ: SĂRI PESTE ÎNREGISTRARE (DREAPTA JOS ÎN MODAL) -->
+            <div class="absolute bottom-3 right-4">
+                <button onclick="sariPesteInregistrare()" class="text-[11px] text-slate-500 hover:text-amber-400 transition underline">
+                    Sări peste înregistrare &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
         <div class="flex flex-col cursor-pointer" onclick="window.location.href='index.html'">
@@ -29,7 +70,7 @@
                 <span class="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></span>
                 <h1 class="text-xl font-black tracking-wider text-white">Brăila <span class="text-amber-500">Hub</span></h1>
             </div>
-            <span class="text-[10px] text-amber-400 font-semibold tracking-wide ml-5">Creat în Brăila pentru brăileni</span>
+            <span id="infoUtilizatorEcran" class="text-[10px] text-amber-400 font-semibold tracking-wide ml-5">Vizitator (Vizite: 1)</span>
         </div>
         
         <!-- CONTROALE SUS -->
@@ -43,7 +84,10 @@
                 💬 Chat Brăileni
             </button>
             <button onclick="deschideModalAnunt()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20">
-                + Adaugă Anunț <span class="bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.5 rounded ml-1">Max 10</span>
+                + Adaugă Anunț <span class="bg-slate-950 text-amber-400 text-[10px] px-1.5 py-0.5 rounded ml-1">Max 5</span>
+            </button>
+            <button onclick="inchideSesiunea()" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition border border-red-500/30">
+                🚪 Ieși din cont
             </button>
         </div>
     </header>
@@ -51,7 +95,7 @@
     <!-- CHAT FLOTANT -->
     <div id="chatFlotant" class="fixed bottom-6 right-6 w-80 bg-slate-900/95 border border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col h-[380px] backdrop-blur-md hidden">
         <div id="chatHeader" class="flex justify-between items-center bg-slate-950 px-4 py-3 border-b border-slate-800 rounded-t-2xl cursor-grab select-none">
-            <span class="font-bold text-amber-400 text-xs">💬 Chat Brăileni (Trage de sus)</span>
+            <span class="font-bold text-amber-400 text-xs">💬 Chat Brăileni</span>
             <div class="flex space-x-2">
                 <button onclick="minimizeazaChat()" class="text-slate-400 hover:text-white text-xs font-bold">_</button>
                 <button onclick="inchideChat()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
@@ -63,7 +107,6 @@
             </div>
         </div>
         <div class="p-3 border-t border-slate-800 bg-slate-950/50 rounded-b-2xl flex gap-1">
-            <input type="text" id="numeChat" placeholder="Nume" class="w-1/4 bg-slate-900 px-2 py-2 rounded-xl border border-slate-800 text-xs text-slate-200">
             <input type="text" id="mesajChat" placeholder="Scrie..." class="flex-grow bg-slate-900 px-2 py-2 rounded-xl border border-slate-800 text-xs text-slate-200" onkeypress="if(event.key === 'Enter') trimiteMesajChat()">
             <button onclick="trimiteMesajChat()" class="bg-amber-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs">Trimite</button>
         </div>
@@ -71,8 +114,7 @@
 
     <!-- CONTINUT PRINCIPAL -->
     <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow relative z-10 flex flex-col items-center">
-        
-        <!-- CEASUL DIN PIAȚA TRAIAN (DESIGNUL ORIGINAL EXACT) -->
+        <!-- CEASUL DIN PIAȚA TRAIAN -->
         <div class="w-44 h-44 rounded-full border-2 border-amber-500/60 flex flex-col items-center justify-center bg-slate-950/90 shadow-[0_0_30px_rgba(245,158,11,0.25)] mb-6 text-center p-3 relative overflow-hidden">
             <div class="absolute inset-0 opacity-40 bg-cover bg-center" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e6/Ceasul_din_Pia%C8%9Ba_Traian_din_Br%C4%83ila.jpg');"></div>
             <div class="relative z-10 flex flex-col items-center justify-center h-full">
@@ -105,7 +147,7 @@
             </button>
         </div>
 
-        <!-- GRID CATEGORII ORIGINALE (CELE 6 CARDURI) -->
+        <!-- GRID CATEGORIE -->
         <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <div onclick="filtreazaCategorie('Producători Locali')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-6 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
                 <span class="text-3xl mb-2">🍅</span>
@@ -119,115 +161,52 @@
                 <span class="text-3xl mb-2">🔧</span>
                 <h3 class="font-bold text-white text-sm">Auto & Mecanică</h3>
             </div>
-            <div onclick="filtreazaCategorie('HoReCa')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-6 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
-                <span class="text-3xl mb-2">🍕</span>
-                <h3 class="font-bold text-white text-sm">HoReCa & Cazare</h3>
-            </div>
-            <div onclick="filtreazaCategorie('Sănătate')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-6 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
-                <span class="text-3xl mb-2">💊</span>
-                <h3 class="font-bold text-white text-sm">Farmacii & Sănătate</h3>
-            </div>
-            <div onclick="filtreazaCategorie('Diverse')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-6 rounded-2xl cursor-pointer transition text-center flex flex-col items-center shadow-lg">
-                <span class="text-3xl mb-2">🏠</span>
-                <h3 class="font-bold text-white text-sm">Meseriași & Servicii</h3>
-            </div>
         </div>
 
         <div class="w-full max-w-6xl flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
             <h3 class="text-lg font-bold text-white">Anunțuri Recente în Brăila</h3>
-            <div class="flex items-center space-x-3">
-                <button onclick="arataAnunturileMele()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 transition">
-                    📁 Anunțurile mele publicate
-                </button>
-                <span class="text-xs text-slate-500">Actualizat live</span>
-            </div>
+            <span class="text-xs text-slate-500">Actualizat live</span>
         </div>
 
-        <!-- LISTĂ ANUNȚURI -->
-        <div id="listaAnunturi" class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Dinamic -->
-        </div>
+        <div id="listaAnunturi" class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
     <!-- MODAL ADAUTARE ANUNT -->
     <div id="modalAnunt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 md:p-8 rounded-2xl shadow-2xl relative my-8">
             <h2 class="text-xl font-bold text-white mb-1">Adaugă Anunț sau Loc de Muncă</h2>
-            <p class="text-xs text-slate-400 mb-6">Creat în Brăila pentru brăileni.</p>
-            
-            <form id="formAdaugaAnunt" onsubmit="trimiteAnunt(event)" class="space-y-4">
+            <form id="formAdaugaAnunt" onsubmit="trimiteAnunt(event)" class="space-y-4 mt-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Număr de Telefon</label>
-                    <input type="text" id="telefonAnunt" required placeholder="07xxxxxxxx" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    <input type="text" id="telefonAnunt" required placeholder="07xxxxxxxx" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
-
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">Categorie</label>
-                    <select id="categorieAnunt" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    <select id="categorieAnunt" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                         <option value="Producători Locali">🍅 Producători & Legume</option>
                         <option value="Pește Proaspăt">🐟 Pește & Dunăre</option>
                         <option value="Servicii">🔧 Auto & Mecanică</option>
-                        <option value="HoReCa">🍕 HoReCa & Cazare</option>
-                        <option value="Sănătate">💊 Farmacii & Sănătate</option>
-                        <option value="Diverse">🏠 Meseriași & Servicii</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Denumire Producător / Firmă (Opțional)</label>
-                    <input type="text" id="denumireAnunt" placeholder="Ex: SC Pescăria Brăileana SRL" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Titlu Anunț</label>
+                    <input type="text" id="titluAnunt" required placeholder="Ex: Vând roșii" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Titlu Anunț</label>
-                        <input type="text" id="titluAnunt" required placeholder="Ex: Angajăm șofer / Vând roșii" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Preț</label>
-                        <input type="text" id="pretAnunt" required placeholder="Ex: 3500 lei / 5 lei/kg" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="col-span-1">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Cartier</label>
-                        <select id="cartierAnunt" required class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200">
-                            <option value="Centru">Centru</option>
-                            <option value="Obor">Obor</option>
-                            <option value="Vidin">Vidin</option>
-                            <option value="Dorobanților">Dorobanților</option>
-                            <option value="Progresul">Progresul</option>
-                            <option value="Viziru">Viziru</option>
-                            <option value="Chercea">Chercea</option>
-                            <option value="Radu Negru">Radu Negru</option>
-                            <option value="Lacu Dulce">Lacu Dulce</option>
-                            <option value="Altele">Altele</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex gap-2">
-                        <div class="flex-grow">
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Strada</label>
-                            <div class="flex items-center bg-slate-950 rounded-xl border border-slate-800 px-3 py-2.5">
-                                <span class="text-slate-400 text-sm select-none mr-1">Str.</span>
-                                <input type="text" id="stradaAnunt" required placeholder="Nume stradă" class="w-full bg-transparent focus:outline-none text-sm text-slate-200">
-                            </div>
-                        </div>
-                        <div class="w-20">
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Nr.</label>
-                            <input type="text" id="numarStradaAnunt" placeholder="Nr." class="w-full bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200 text-center">
-                        </div>
-                    </div>
-                </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Detalii Suplimentare</label>
-                    <textarea id="detaliiAnunt" required rows="3" placeholder="Scrie detaliile complete aici..." class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 focus:border-amber-500 focus:outline-none text-sm text-slate-200"></textarea>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Preț</label>
+                    <input type="text" id="pretAnunt" required placeholder="Ex: 5 lei/kg" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
                 </div>
-
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="cartierAnunt" required placeholder="Cartier" class="bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                    <input type="text" id="stradaAnunt" required placeholder="Stradă" class="bg-slate-950 px-3 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Detalii</label>
+                    <textarea id="detaliiAnunt" required rows="3" class="w-full bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-sm text-slate-200"></textarea>
+                </div>
                 <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="inchideModalAnunt()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl transition text-sm">Anulează</button>
-                    <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg text-sm">Publică Instant</button>
+                    <button type="button" onclick="inchideModalAnunt()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-sm">Anulează</button>
+                    <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Publică</button>
                 </div>
             </form>
         </div>
@@ -238,192 +217,138 @@
     </footer>
 
     <script>
-        let radioPornit = true;
-        const audio = document.getElementById('radioLocal');
-        audio.volume = 0.2;
+        let esteInregistrare = false;
 
-        window.addEventListener('click', () => {
-            if (radioPornit && audio.paused) {
-                audio.play().catch(e => console.log("Auto-play blocat"));
-            }
-        }, { once: true });
+        document.addEventListener("DOMContentLoaded", () => {
+            verificaSesiuneUtilizator();
+            incarcaAnunturi();
+        });
 
-        function toggleRadio() {
-            if (radioPornit) {
-                audio.pause();
-                document.getElementById('btnRadio').innerText = "Oprit";
-                radioPornit = false;
+        function verificaSesiuneUtilizator() {
+            const userSalvat = localStorage.getItem('brailaHubUser');
+            if (userSalvat) {
+                try {
+                    const user = JSON.parse(userSalvat);
+                    document.getElementById('modalAuth').classList.add('hidden');
+                    document.getElementById('infoUtilizatorEcran').innerText = `${user.nume} (Vizite: ${user.vizite || 1})`;
+                } catch(e) {}
             } else {
-                audio.play();
-                document.getElementById('btnRadio').innerText = "Pornit";
-                radioPornit = true;
+                document.getElementById('modalAuth').classList.remove('hidden');
             }
         }
 
-        function schimbaVolum(val) { audio.volume = val; }
+        function schimbaModAuth() {
+            esteInregistrare = !esteInregistrare;
+            document.getElementById('divNume').classList.toggle('hidden', !esteInregistrare);
+            document.getElementById('titluAuth').innerText = esteInregistrare ? "Creează un Cont Nou" : "Autentificare pe Brăila Hub";
+            document.getElementById('btnSubmitAuth').innerText = esteInregistrare ? "Înregistrează-te" : "Autentificare";
+            document.getElementById('comutatorAuthText').innerText = esteInregistrare ? "Ai deja cont? Autentifică-te" : "Nu ai cont? Înregistrează-te";
+        }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            incarcaAnunturi();
-            deschideChat();
-            
-            const savedUser = localStorage.getItem('brailaHubUser');
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    if (user.contact) document.getElementById('telefonAnunt').value = user.contact;
-                    if (user.nume) document.getElementById('numeChat').value = user.nume;
-                } catch(e) {}
+        async function gestioneazaAuth(e) {
+            e.preventDefault();
+            const contact = document.getElementById('authContact').value;
+            const parola = document.getElementById('authParola').value;
+            const nume = document.getElementById('authNume').value;
+
+            const endpoint = esteInregistrare ? '/api/inregistrare' : '/api/login';
+            const bodyData = esteInregistrare ? { nume, contact, parola } : { contact, parola };
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('brailaHubUser', JSON.stringify(data.user));
+                    document.getElementById('modalAuth').classList.add('hidden');
+                    document.getElementById('infoUtilizatorEcran').innerText = `${data.user.nume} (Vizite: ${data.user.vizite})`;
+                    alert(data.mesaj);
+                } else {
+                    alert(data.mesaj || "Eroare la autentificare.");
+                }
+            } catch (err) {
+                alert("Eroare de conexiune cu serverul.");
             }
-            activeazaMutareChat();
-        });
+        }
 
+        function sariPesteInregistrare() {
+            localStorage.setItem('brailaHubUser', JSON.stringify({ nume: "Vizitator", vizite: 1 }));
+            document.getElementById('modalAuth').classList.add('hidden');
+            document.getElementById('infoUtilizatorEcran').innerText = "Vizitator (Vizite: 1)";
+        }
+
+        function inchideSesiunea() {
+            localStorage.removeItem('brailaHubUser');
+            location.reload();
+        }
+
+        // Functii pentru site / anunturi
         function deschideModalAnunt() { document.getElementById('modalAnunt').classList.remove('hidden'); }
         function inchideModalAnunt() { document.getElementById('modalAnunt').classList.add('hidden'); }
         function deschideChat() { document.getElementById('chatFlotant').classList.remove('hidden'); }
         function inchideChat() { document.getElementById('chatFlotant').classList.add('hidden'); }
-        
-        function minimizeazaChat() {
-            const cont = document.getElementById('mesajeChatContainer');
-            cont.style.display = cont.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function activeazaMutareChat() {
-            const chat = document.getElementById('chatFlotant');
-            const header = document.getElementById('chatHeader');
-            let isDragging = false, startX, startY;
-
-            header.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX - chat.offsetLeft;
-                startY = e.clientY - chat.offsetTop;
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                chat.style.left = (e.clientX - startX) + 'px';
-                chat.style.top = (e.clientY - startY) + 'px';
-                chat.style.bottom = 'auto';
-                chat.style.right = 'auto';
-            });
-
-            document.addEventListener('mouseup', () => { isDragging = false; });
-        }
 
         function filtreazaCategorie(cat) {
             document.getElementById('inputCautare').value = cat;
             incarcaAnunturi();
-            window.scrollTo({ top: 600, behavior: 'smooth' });
         }
 
-        async function incarcaAnunturi(filtruTelefon = null) {
+        async function incarcaAnunturi() {
             const cautare = document.getElementById('inputCautare').value;
-            let url = '/api/anunturi?';
-            if (filtruTelefon) url += `telefon=${filtruTelefon}&`;
-            if (cautare) url += `cautare=${encodeURIComponent(cautare)}`;
-
             try {
-                const res = await fetch(url);
+                const res = await fetch(`/api/anunturi?cautare=${encodeURIComponent(cautare)}`);
                 const anunturi = await res.json();
                 const container = document.getElementById('listaAnunturi');
                 if (anunturi.length === 0) {
-                    container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri în acest moment. Fii primul care adaugă!</div>`;
+                    container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri momentan.</div>`;
                     return;
                 }
                 container.innerHTML = anunturi.map(a => `
-                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between hover:border-amber-500/50 transition backdrop-blur-sm">
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                         <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-500/20">${a.categorie}</span>
-                                <span class="text-emerald-400 font-extrabold text-sm">${a.pret}</span>
-                            </div>
-                            ${a.denumire ? `<div class="text-xs font-semibold text-slate-400 mb-1">🏢 ${a.denumire}</div>` : ''}
-                            <h3 class="text-lg font-bold text-white mb-2">${a.titlu}</h3>
-                            <p class="text-slate-300 text-xs leading-relaxed mb-4 whitespace-pre-line">${a.detalii}</p>
+                            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
+                            <h3 class="text-lg font-bold text-white mt-2 mb-1">${a.titlu}</h3>
+                            <p class="text-emerald-400 font-extrabold text-sm mb-2">${a.pret}</p>
+                            <p class="text-slate-300 text-xs">${a.detalii}</p>
                         </div>
-                        <div class="border-t border-slate-800/80 pt-3 mt-2 flex flex-col space-y-2 text-xs">
-                            <span class="text-slate-400">📍 ${a.cartier}, Str. ${a.strada}${a.numarStrada ? ' nr. ' + a.numarStrada : ''}</span>
-                            <div class="flex justify-between items-center">
-                                <a href="tel:${a.telefon}" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-md flex items-center space-x-1">
-                                    <span>📞 ${a.telefon}</span>
-                                </a>
-                                <button onclick="stergeAnuntPropriu('${a._id}')" class="text-red-400 hover:underline text-[11px]">Șterge</button>
-                            </div>
+                        <div class="border-t border-slate-800/80 pt-3 mt-4 text-xs text-slate-400 flex justify-between">
+                            <span>📍 ${a.cartier}, ${a.strada}</span>
+                            <a href="tel:${a.telefon}" class="text-emerald-400 font-bold">📞 ${a.telefon}</a>
                         </div>
                     </div>
                 `).join('');
-            } catch (err) { console.error(err); }
-        }
-
-        function arataAnunturileMele() {
-            const savedUser = localStorage.getItem('brailaHubUser');
-            if (!savedUser) {
-                alert("Te rugăm să te înscrii mai întâi cu numărul tău de telefon pe pagina de bun venit.");
-                return;
-            }
-            try {
-                const user = JSON.parse(savedUser);
-                if(user.contact) {
-                    incarcaAnunturi(user.contact);
-                    alert("Se afișează doar anunțurile tale publicate.");
-                }
             } catch(e) {}
         }
 
         async function trimiteAnunt(e) {
             e.preventDefault();
-            const dateAnunt = {
+            const date = {
                 telefon: document.getElementById('telefonAnunt').value,
                 categorie: document.getElementById('categorieAnunt').value,
-                denumire: document.getElementById('denumireAnunt').value,
                 titlu: document.getElementById('titluAnunt').value,
                 pret: document.getElementById('pretAnunt').value,
                 cartier: document.getElementById('cartierAnunt').value,
                 strada: document.getElementById('stradaAnunt').value,
-                numarStrada: document.getElementById('numarStradaAnunt').value,
                 detalii: document.getElementById('detaliiAnunt').value
             };
             try {
                 const res = await fetch('/api/anunturi', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dateAnunt)
+                    body: JSON.stringify(date)
                 });
-                const rezultat = await res.json();
-                if (res.ok) {
-                    alert("Anunțul a fost publicat cu succes!");
+                const rez = await res.json();
+                if(res.ok) {
+                    alert("Anunț publicat!");
                     inchideModalAnunt();
-                    document.getElementById('formAdaugaAnunt').reset();
                     incarcaAnunturi();
                 } else {
-                    alert(rezultat.mesaj || "Eroare la publicare.");
+                    alert(rez.mesaj);
                 }
-            } catch (err) { alert("Eroare de conexiune cu serverul."); }
-        }
-
-        async function stergeAnuntPropriu(id) {
-            if (confirm("Sigur doriți să ștergeți acest anunț?")) {
-                try {
-                    const res = await fetch(`/api/anunturi/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        alert("Anunțul a fost șters.");
-                        incarcaAnunturi();
-                    }
-                } catch (e) { alert("Eroare la ștergere."); }
-            }
-        }
-
-        function trimiteMesajChat() {
-            const nume = document.getElementById('numeChat').value || "Brăilean";
-            const mesaj = document.getElementById('mesajChat').value;
-            if(!mesaj.trim()) return;
-            const container = document.getElementById('mesajeChatContainer');
-            container.innerHTML += `
-                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
-                    <strong class="text-amber-400">${nume}:</strong> ${mesaj}
-                </div>
-            `;
-            document.getElementById('mesajChat').value = '';
-            container.scrollTop = container.scrollHeight;
+            } catch(e) { alert("Eroare server."); }
         }
     </script>
 </body>

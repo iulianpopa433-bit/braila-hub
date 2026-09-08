@@ -6,88 +6,178 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://iulianpopa433_db_user:z0x1hJYhOAFOqjWG@cluster0-shard-00-00.t6io4vq.mongodb.net:27017,cluster0-shard-00-01.t6io4vq.mongodb.net:27017,cluster0-shard-00-02.t6io4vq.mongodb.net:27017/brailahub?ssl=true&replicaSet=atlas-t6io4vq-shard-0&authSource=admin&retryWrites=true&w=majority';
+// Servire fișiere statice din folderul curent
+app.use(express.static(__dirname));
 
-mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 30000,
-    socketTimeoutMS: 45000,
-    tls: true,
-    tlsAllowInvalidCertificates: true
-})
-    .then(() => console.log("Conectat cu succes la MongoDB Atlas pentru Brăila Hub!"))
-    .catch((err) => console.error("Eroare de conectare la MongoDB:", err));
+// --- CONEXIUNE MONGODB ---
+// Asigură-te că ai variabila de mediu MONGO_URI configurată în Render sau pune link-ul direct
+const MONGO_URI = process.env.MONGO_URI || "LINK_UL_TAU_MONGODB"; 
 
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("Conectat la MongoDB cu succes!"))
+    .catch(err => console.error("Eroare conectare MongoDB:", err));
+
+// ==========================================
+// 1. MODEL ȘI RUTE PENTRU UTILIZATORI (AUTENTIFICARE & VIZITE)
+// ==========================================
+const userSchema = new mongoose.Schema({
+    nume: { type: String, required: true },
+    contact: { type: String, required: true, unique: true }, // Email sau Telefon
+    parola: { type: String, required: true },
+    vizite: { type: Number, default: 1 },
+    dataCrearii: { type: Date, default: Date.now }
+});
+const User = mongoose.model('User', userSchema);
+
+// Înregistrare cont nou
+app.post('/api/inregistrare', async (req, res) => {
+    try {
+        const { nume, contact, parola } = req.body;
+        if (!nume || !contact || !parola) {
+            return res.status(400).json({ mesaj: "Toate câmpurile sunt obligatorii!" });
+        }
+        
+        let utilizatorExistent = await User.findOne({ contact });
+        if (utilizatorExistent) {
+            return res.status(400).json({ mesaj: "Acest email sau număr de telefon este deja înregistrat!" });
+        }
+
+        const utilizatorNou = new User({ nume, contact, parola, vizite: 1 });
+        await utilizatorNou.save();
+        res.status(201).json({ mesaj: "Cont creat cu succes!", user: utilizatorNou });
+    } catch (err) {
+        console.error("Eroare înregistrare:", err);
+        res.status(500).json({ mesaj: "Eroare la server la înregistrare." });
+    }
+});
+
+// Autentificare (Login) și creștere număr vizite
+app.post('/api/login', async (req, res) => {
+    try {
+        const { contact, parola } = req.body;
+        const user = await User.findOne({ contact, parola });
+        
+        if (!user) {
+            return res.status(400).json({ mesaj: "Date de autentificare incorecte (Email/Telefon sau Parolă greșită)!" });
+        }
+
+        // Incrementăm numărul de vizite la fiecare autentificare reușită
+        user.vizite += 1;
+        await user.save();
+
+        res.json({ mesaj: "Autentificare reușită!", user });
+    } catch (err) {
+        console.error("Eroare login:", err);
+        res.status(500).json({ mesaj: "Eroare la server la autentificare." });
+    }
+});
+
+
+// ==========================================
+// 2. MODEL ȘI RUTE PENTRU ANUNȚURI (LIMITĂ 5)
+// ==========================================
 const anuntSchema = new mongoose.Schema({
     telefon: { type: String, required: true },
     categorie: { type: String, required: true },
-    denumire: { type: String, default: '' },
     titlu: { type: String, required: true },
     pret: { type: String, required: true },
     cartier: { type: String, required: true },
     strada: { type: String, required: true },
-    numarStrada: { type: String, default: '' },
     detalii: { type: String, required: true },
-    dataCreare: { type: Date, default: Date.now, expires: '30d' }
+    dataCrearii: { type: Date, default: Date.now }
 });
-
 const Anunt = mongoose.model('Anunt', anuntSchema);
 
+// Preluare anunțuri (cu opțiune de căutare)
 app.get('/api/anunturi', async (req, res) => {
     try {
-        const { cautare, cartier, telefon } = req.query;
+        const { cautare } = req.query;
         let query = {};
-        if (telefon) query.telefon = telefon;
-        if (cartier) query.cartier = { $regex: cartier, $options: 'i' };
         if (cautare) {
-            query.$or = [
-                { titlu: { $regex: cautare, $options: 'i' } },
-                { detalii: { $regex: cautare, $options: 'i' } },
-                { categorie: { $regex: cautare, $options: 'i' } },
-                { denumire: { $regex: cautare, $options: 'i' } }
-            ];
+            query = {
+                $or: [
+                    { titlu: { $regex: cautare, $options: 'i' } },
+                    { categorie: { $regex: cautare, $options: 'i' } },
+                    { detali: { $regex: cautare, $options: 'i' } },
+                    { cartier: { $regex: cautare, $options: 'i' } }
+                ]
+            };
         }
-        const anunturi = await Anunt.find(query).sort({ dataCreare: -1 });
+        const anunturi = await Anunt.find(query).sort({ dataCrearii: -1 });
         res.json(anunturi);
-    } catch (error) {
-        res.status(500).json({ mesaj: "Eroare la preluarea anunțurilor" });
+    } catch (err) {
+        res.status(500).json({ mesaj: "Eroare la preluarea anunțurilor." });
     }
 });
 
+// Adăugare anunț nou (Verificare max 5 anunțuri per număr de telefon)
 app.post('/api/anunturi', async (req, res) => {
     try {
-        const { telefon, categorie, denumire, titlu, pret, cartier, strada, numarStrada, detalii } = req.body;
-        if (!telefon || !titlu || !pret || !cartier) {
-            return res.status(400).json({ mesaj: "Telefonul, titlul, prețul și cartierul sunt obligatorii." });
+        const { telefon, categorie, titlu, pret, cartier, strada, detalii } = req.body;
+        
+        if (!telefon || telefon.length < 10) {
+            return res.status(400).json({ mesaj: "Te rugăm să introduci un număr de telefon valid (minim 10 cifre)." });
         }
-        const oLunaInUrma = new Date();
-        oLunaInUrma.setDate(oLunaInUrma.getDate() - 30);
-        const numarAnunturiExistente = await Anunt.countDocuments({
+
+        // Verificăm câte anunțuri active are acest număr de telefon (limita de 5)
+        const anunturiExistente = await Anunt.countDocuments({ telefon });
+        if (anunturiExistente >= 5) {
+            return res.status(400).json({ mesaj: "Ai atins limita maximă de 5 anunțuri active pentru acest număr de telefon." });
+        }
+
+        const anuntNou = new Anunt({
             telefon,
-            dataCreare: { $gte: oLunaInUrma }
+            categorie,
+            titlu,
+            pret,
+            cartier,
+            strada,
+            detalii
         });
-        if (numarAnunturiExistente >= 5) {
-            return res.status(400).json({ mesaj: "Limită atinsă! Ai deja 5 anunțuri active înregistrate pe acest număr în ultima lună." });
-        }
-        const anuntNou = new Anunt({ telefon, categorie, denumire: denumire || '', titlu, pret, cartier, strada, numarStrada: numarStrada || '', detalii });
+
         await anuntNou.save();
-        res.status(201).json({ mesaj: "Anunțul a fost publicat cu succes!", anunt: anuntNou });
-    } catch (error) {
-        res.status(500).json({ mesaj: "Eroare la server privind salvarea anunțului" });
+        res.status(201).json({ mesaj: "Anunț publicat cu succes!" });
+    } catch (err) {
+        console.error("Eroare salvare anunț:", err);
+        res.status(500).json({ mesaj: "Eroare la server privind salvarea anunțului." });
     }
 });
 
-app.delete('/api/anunturi/:id', async (req, res) => {
+
+// ==========================================
+// 3. RUTE PENTRU CHAT (OPȚIONAL / SUPORT)
+// ==========================================
+const mesajSchema = new mongoose.Schema({
+    nume: String,
+    text: String,
+    data: { type: Date, default: Date.now }
+});
+const MesajChat = mongoose.model('MesajChat', mesajSchema);
+
+app.get('/api/chat', async (req, res) => {
     try {
-        await Anunt.findByIdAndDelete(req.params.id);
-        res.json({ mesaj: "Anunțul a fost șters cu succes!" });
-    } catch (error) {
-        res.status(500).json({ mesaj: "Eroare la ștergerea anunțului" });
+        const mesaje = await MesajChat.find().sort({ data: 1 }).limit(50);
+        res.json(mesaje);
+    } catch(e) {
+        res.status(500).json({ mesaj: "Eroare chat" });
     }
 });
 
-const PORT = process.env.PORT || 5000;
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { nume, text } = req.body;
+        const mesajNou = new MesajChat({ nume, text });
+        await mesajNou.save();
+        res.status(201).json(mesajNou);
+    } catch(e) {
+        res.status(500).json({ mesaj: "Eroare trimitere mesaj" });
+    }
+});
+
+
+// Pornire server pe portul alocat de Render sau 3000
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Serverul rulează pe portul ${PORT}`);
 });
