@@ -391,7 +391,7 @@
             incarcaAnunturi();
         }
 
-        // FUNCȚIE NOUĂ: Încarcă anunțurile salvate în browser (localStorage)
+        // FUNCȚIE MODIFICATĂ: Încarcă anunțurile și include butonul de ștergere
         function incarcaAnunturi() {
             const cautare = document.getElementById('inputCautare').value.toLowerCase();
             let anunturi = JSON.parse(localStorage.getItem('brailaHubAnunturi') || '[]');
@@ -411,10 +411,13 @@
                 return;
             }
 
-            container.innerHTML = anunturi.map(a => `
+            container.innerHTML = anunturi.map((a, i) => `
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                     <div>
-                        <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
+                        <div class="flex justify-between items-start">
+                            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
+                            <button onclick="stergeAnunt(${i})" class="text-slate-500 hover:text-red-400 text-xs font-bold px-2 py-1 transition" title="Șterge anunțul">🗑️ Șterge</button>
+                        </div>
                         ${a.numeMagazin ? `<p class="text-xs text-amber-300 font-semibold mt-2">🏪 ${a.numeMagazin}</p>` : ''}
                         <h3 class="text-lg font-bold text-white mt-1 mb-1">${a.titlu}</h3>
                         <p class="text-emerald-400 font-extrabold text-sm mb-2">Preț: ${a.pret} LEI</p>
@@ -431,7 +434,7 @@
             `).reverse().join('');
         }
 
-        // FUNCȚIE NOUĂ: Salvează anunțul local în browser instant
+        // Salvează anunțul local în browser instant
         function trimiteAnunt(e) {
             e.preventDefault();
             const date = {
@@ -457,6 +460,19 @@
                 incarcaAnunturi();
             } catch(err) {
                 alert("Eroare la publicare.");
+            }
+        }
+
+        // FUNCȚIE NOUĂ: Șterge anunțul selectat din memorie
+        function stergeAnunt(indexReal) {
+            if (confirm("Ești sigur că vrei să ștergi acest anunț?")) {
+                let anunturi = JSON.parse(localStorage.getItem('brailaHubAnunturi') || '[]');
+                let indexDeSters = anunturi.length - 1 - indexReal;
+
+                anunturi.splice(indexDeSters, 1);
+                localStorage.setItem('brailaHubAnunturi', JSON.stringify(anunturi));
+                
+                incarcaAnunturi();
             }
         }
 
