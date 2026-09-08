@@ -391,38 +391,48 @@
             incarcaAnunturi();
         }
 
-        async function incarcaAnunturi() {
-            const cautare = document.getElementById('inputCautare').value;
-            try {
-                const res = await fetch(`/api/anunturi?cautare=${encodeURIComponent(cautare)}`);
-                const anunturi = await res.json();
-                const container = document.getElementById('listaAnunturi');
-                if (anunturi.length === 0) {
-                    container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri momentan pentru această căutare.</div>`;
-                    return;
-                }
-                container.innerHTML = anunturi.map(a => `
-                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                        <div>
-                            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
-                            ${a.numeMagazin ? `<p class="text-xs text-amber-300 font-semibold mt-2">🏪 ${a.numeMagazin}</p>` : ''}
-                            <h3 class="text-lg font-bold text-white mt-1 mb-1">${a.titlu}</h3>
-                            <p class="text-emerald-400 font-extrabold text-sm mb-2">Preț: ${a.pret} LEI</p>
-                            <p class="text-slate-300 text-xs">${a.detalii}</p>
-                        </div>
-                        <div class="border-t border-slate-800/80 pt-3 mt-4 text-xs text-slate-400 flex flex-col gap-1">
-                            <span>📍 Cartier: ${a.cartier}, ${a.strada}</span>
-                            <div class="flex justify-between items-center">
-                                <a href="tel:${a.telefon}" class="text-emerald-400 font-bold">📞 ${a.telefon}</a>
-                                ${a.email ? `<a href="mailto:${a.email}" class="text-amber-400">✉️ Email</a>` : ''}
-                            </div>
+        // FUNCȚIE NOUĂ: Încarcă anunțurile salvate în browser (localStorage)
+        function incarcaAnunturi() {
+            const cautare = document.getElementById('inputCautare').value.toLowerCase();
+            let anunturi = JSON.parse(localStorage.getItem('brailaHubAnunturi') || '[]');
+
+            if (cautare) {
+                anunturi = anunturi.filter(a => 
+                    a.titlu.toLowerCase().includes(cautare) || 
+                    a.categorie.toLowerCase().includes(cautare) || 
+                    a.detalii.toLowerCase().includes(cautare) ||
+                    a.cartier.toLowerCase().includes(cautare)
+                );
+            }
+
+            const container = document.getElementById('listaAnunturi');
+            if (anunturi.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-sm">Nu există anunțuri momentan pentru această căutare. Fii primul care adaugă unul!</div>`;
+                return;
+            }
+
+            container.innerHTML = anunturi.map(a => `
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <span class="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">${a.categorie}</span>
+                        ${a.numeMagazin ? `<p class="text-xs text-amber-300 font-semibold mt-2">🏪 ${a.numeMagazin}</p>` : ''}
+                        <h3 class="text-lg font-bold text-white mt-1 mb-1">${a.titlu}</h3>
+                        <p class="text-emerald-400 font-extrabold text-sm mb-2">Preț: ${a.pret} LEI</p>
+                        <p class="text-slate-300 text-xs">${a.detalii}</p>
+                    </div>
+                    <div class="border-t border-slate-800/80 pt-3 mt-4 text-xs text-slate-400 flex flex-col gap-1">
+                        <span>📍 Cartier: ${a.cartier}, ${a.strada}</span>
+                        <div class="flex justify-between items-center">
+                            <a href="tel:${a.telefon}" class="text-emerald-400 font-bold">📞 ${a.telefon}</a>
+                            ${a.email ? `<a href="mailto:${a.email}" class="text-amber-400">✉️ Email</a>` : ''}
                         </div>
                     </div>
-                `).join('');
-            } catch(e) {}
+                </div>
+            `).reverse().join('');
         }
 
-        async function trimiteAnunt(e) {
+        // FUNCȚIE NOUĂ: Salvează anunțul local în browser instant
+        function trimiteAnunt(e) {
             e.preventDefault();
             const date = {
                 telefon: document.getElementById('telefonAnunt').value,
@@ -435,20 +445,30 @@
                 strada: document.getElementById('stradaAnunt').value,
                 detalii: document.getElementById('detaliiAnunt').value
             };
+
             try {
-                const res = await fetch('/api/anunturi', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(date)
-                });
-                if(res.ok) {
-                    alert("Anunț publicat cu succes!");
-                    inchideModalAnunt();
-                    incarcaAnunturi();
-                } else {
-                    alert("Eroare la publicare.");
-                }
-            } catch(e) { alert("Eroare de conexiune cu serverul."); }
+                let anunturiExistente = JSON.parse(localStorage.getItem('brailaHubAnunturi') || '[]');
+                anunturiExistente.push(date);
+                localStorage.setItem('brailaHubAnunturi', JSON.stringify(anunturiExistente));
+
+                alert("Anunț publicat cu succes!");
+                document.getElementById('formAdaugaAnunt').reset();
+                inchideModalAnunt();
+                incarcaAnunturi();
+            } catch(err) {
+                alert("Eroare la publicare.");
+            }
+        }
+
+        // Funcție opțională pentru chat-ul local
+        function trimiteMesajChat() {
+            const input = document.getElementById('mesajChat');
+            const text = input.value.trim();
+            if(!text) return;
+            const container = document.getElementById('mesajeChatContainer');
+            container.innerHTML += `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800/80"><strong class="text-amber-400">Tu:</strong> ${text}</div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
         }
     </script>
 </body>
