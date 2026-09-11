@@ -1,81 +1,53 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.use(express.json());
-app.use(cors());
 
-// Servire fișiere statice din folderul curent
-app.use(express.static(__dirname));
+// Configurare pentru a accepta imagini mari și JSON
+app.use(express.json({ limit: '10mb' }));
+app.use(cors());
+app.use(express.static(__dirname)); // Servire fișiere statice (HTML/CSS/JS)
+
+// --- CONFIGURARE CLOUDINARY (GRATUIT PENTRU IMAGINI) ---
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+// --- PROTECȚIE ANTI-SPAM (RATE LIMITING) ---
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minute
+    max: 100, // Maxim 100 cereri per IP
+    message: { mesaj: "Prea multe cereri! Te rugăm să aștepți puțin." }
+});
+app.use('/api/', limiter);
 
 // --- CONEXIUNE MONGODB ---
-const MONGO_URI = process.env.MONGO_URI || "LINK_UL_TAU_MONGODB"; 
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ Conectat la MongoDB Atlas"))
+    .catch(err => console.error("❌ Eroare conectare DB:", err));
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("Conectat la MongoDB cu succes!"))
-    .catch(err => console.error("Eroare conectare MongoDB:", err));
-
-// ==========================================
-// 1. MODEL ȘI RUTE PENTRU UTILIZATORI (AUTENTIFICARE CU PAROLĂ)
-// ==========================================
-const userSchema = new mongoose.Schema({
+// --- MODELE BAZĂ DE DATE ---
+const UserSchema = new mongoose.Schema({
     nume: { type: String, required: true },
-    contact: { type: String, required: true, unique: true }, // Email sau Telefon
+    contact: { type: String, required: true, unique: true },
     parola: { type: String, required: true },
     vizite: { type: Number, default: 1 },
     dataCrearii: { type: Date, default: Date.now }
 });
-const User = mongoose.model('User', userSchema);
 
-// Înregistrare cont nou
-app.post('/api/inregistrare', async (req, res) => {
-    try {
-        const { nume, contact, parola } = req.body;
-        if (!nume || !contact || !parola) {
-            return res.status(400).json({ mesaj: "Toate câmpurile sunt obligatorii!" });
-        }
-        
-        let utilizatorExistent = await User.findOne({ contact });
-        if (utilizatorExistent) {
-            return res.status(400).json({ mesaj: "Acest email sau număr de telefon este deja înregistrat!" });
-        }
-
-        const utilizatorNou = new User({ nume, contact, parola, vizite: 1 });
-        await utilizatorNou.save();
-        res.status(201).json({ mesaj: "Cont creat cu succes!", user: utilizatorNou });
-    } catch (err) {
-        console.error("Eroare înregistrare:", err);
-        res.status(500).json({ mesaj: "Eroare la server la înregistrare." });
-    }
-});
-
-// Autentificare (Login) cu parolă
-app.post('/api/login', async (req, res) => {
-    try {
-        const { contact, parola } = req.body;
-        const user = await User.findOne({ contact, parola });
-        
-        if (!user) {
-            return res.status(400).json({ mesaj: "Date de autentificare incorecte (Email/Telefon sau Parolă greșită)!" });
-        }
-
-        user.vizite += 1;
-        await user.save();
-
-        res.json({ mesaj: "Autentificare reușită!", user });
-    } catch (err) {
-        console.error("Eroare login:", err);
-        res.status(500).json({ mesaj: "Eroare la server la autentificare." });
-    }
-});
-
-
-// ==========================================
-// 2. MODEL ȘI RUTE PENTRU ANUNȚURI (LIMITĂ 5)
-// ==========================================
-const anuntSchema = new mongoose.Schema({
+const AnuntSchema = new mongoose.Schema({
     telefon: { type: String, required: true },
     categorie: { type: String, required: true },
     titlu: { type: String, required: true },
@@ -83,97 +55,163 @@ const anuntSchema = new mongoose.Schema({
     cartier: { type: String, required: true },
     strada: { type: String, required: true },
     detalii: { type: String, required: true },
+    imagine: { type: String }, // URL către Cloudinary
     dataCrearii: { type: Date, default: Date.now }
-});
-const Anunt = mongoose.model('Anunt', anuntSchema);
+}, { index: true });
 
-// Preluare anunțuri (cu opțiune de căutare)
-app.get('/api/anunturi', async (req, res) => {
-    try {
-        const { cautare } = req.query;
-        let query = {};
-        if (cautare) {
-            query = {
-                $or: [
-                    { titlu: { $regex: cautare, $options: 'i' } },
-                    { categorie: { $regex: cautare, $options: 'i' } },
-                    { detali: { $regex: cautare, $options: 'i' } },
-                    { cartier: { $regex: cautare, $options: 'i' } }
-                ]
-            };
-        }
-        const anunturi = await Anunt.find(query).sort({ dataCrearii: -1 });
-        res.json(anunturi);
-    } catch (err) {
-        res.status(500).json({ mesaj: "Eroare la preluarea anunțurilor." });
-    }
-});
-
-// Adăugare anunț nou (Verificare max 5 anunțuri per număr de telefon)
-app.post('/api/anunturi', async (req, res) => {
-    try {
-        const { telefon, categorie, titlu, pret, cartier, strada, detalii } = req.body;
-        
-        if (!telefon || telefon.length < 10) {
-            return res.status(400).json({ mesaj: "Te rugăm să introduci un număr de telefon valid (minim 10 cifre)." });
-        }
-
-        const anunturiExistente = await Anunt.countDocuments({ telefon });
-        if (anunturiExistente >= 5) {
-            return res.status(400).json({ mesaj: "Ai atins limita maximă de 5 anunțuri active pentru acest număr de telefon." });
-        }
-
-        const anuntNou = new Anunt({
-            telefon,
-            categorie,
-            titlu,
-            pret,
-            cartier,
-            strada,
-            detalii
-        });
-
-        await anuntNou.save();
-        res.status(201).json({ mesaj: "Anunț publicat cu succes!" });
-    } catch (err) {
-        console.error("Eroare salvare anunț:", err);
-        res.status(500).json({ mesaj: "Eroare la server privind salvarea anunțului." });
-    }
-});
-
-
-// ==========================================
-// 3. RUTE PENTRU CHAT
-// ==========================================
-const mesajSchema = new mongoose.Schema({
+const ChatSchema = new mongoose.Schema({
     nume: String,
     text: String,
     data: { type: Date, default: Date.now }
 });
-const MesajChat = mongoose.model('MesajChat', mesajSchema);
 
+const User = mongoose.model('User', UserSchema);
+const Anunt = mongoose.model('Anunt', AnuntSchema);
+const MesajChat = mongoose.model('MesajChat', ChatSchema);
+
+// ==========================================
+// RUTE AUTENTIFICARE (JWT + BCRYPT)
+// ==========================================
+app.post('/api/inregistrare', async (req, res) => {
+    try {
+        const { nume, contact, parola } = req.body;
+        if (!nume || !contact || !parola) 
+            return res.status(400).json({ mesaj: "Toate câmpurile sunt obligatorii!" });
+        
+        const existent = await User.findOne({ contact });
+        if (existent) 
+            return res.status(400).json({ mesaj: "Acest contact este deja înregistrat!" });
+
+        const hash = await bcrypt.hash(parola, 10);
+        const user = await new User({ nume, contact, parola: hash }).save();
+        
+        // Generare Token JWT
+        const token = jwt.sign(
+            { id: user._id, contact: user.contact }, 
+            process.env.JWT_SECRET || 'braila-hub-secret-key-2026'
+        );
+
+        res.status(201).json({ 
+            mesaj: "Cont creat cu succes!", 
+            token, 
+            user: { nume: user.nume, contact: user.contact } 
+        });
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ mesaj: "Eroare la înregistrare" }); 
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    try {
+        const { contact, parola } = req.body;
+        const user = await User.findOne({ contact });
+        
+        if (!user || !(await bcrypt.compare(parola, user.parola))) 
+            return res.status(400).json({ mesaj: "Date de autentificare incorecte!" });
+
+        user.vizite += 1; 
+        await user.save();
+
+        const token = jwt.sign(
+            { id: user._id, contact: user.contact }, 
+            process.env.JWT_SECRET || 'braila-hub-secret-key-2026'
+        );
+
+        res.json({ 
+            mesaj: "Autentificare reușită!", 
+            token, 
+            user: { nume: user.nume, contact: user.contact } 
+        });
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ mesaj: "Eroare la login" }); 
+    }
+});
+
+// ==========================================
+// RUTE ANUNȚURI (CU UPLOAD IMAGINI)
+// ==========================================
+app.get('/api/anunturi', async (req, res) => {
+    try {
+        const { cautare } = req.query;
+        let query = {};
+        
+        if (cautare) {
+            query = { $or: [
+                { titlu: { $regex: cautare, $options: 'i' } },
+                { detalii: { $regex: cautare, $options: 'i' } }, // FIX: Era 'detali'
+                { cartier: { $regex: cautare, $options: 'i' } },
+                { categorie: { $regex: cautare, $options: 'i' } }
+            ]};
+        }
+        
+        const anunturi = await Anunt.find(query).sort({ dataCrearii: -1 }).limit(50);
+        res.json(anunturi);
+    } catch (err) { 
+        res.status(500).json({ mesaj: "Eroare la preluarea anunțurilor" }); 
+    }
+});
+
+app.post('/api/anunturi', upload.single('imagine'), async (req, res) => {
+    try {
+        const { telefon, categorie, titlu, pret, cartier, strada, detalii } = req.body;
+        
+        // Validare telefon
+        if (!telefon || !/^\d{10,}$/.test(telefon)) 
+            return res.status(400).json({ mesaj: "Introdu un număr de telefon valid (minim 10 cifre)!" });
+
+        // Verificare limită 5 anunțuri
+        const count = await Anunt.countDocuments({ telefon });
+        if (count >= 5) 
+            return res.status(400).json({ mesaj: "Ai atins limita maximă de 5 anunțuri pentru acest telefon!" });
+
+        // Upload imagine pe Cloudinary (dacă există)
+        let imgUrl = null;
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { folder: 'braila-hub', resource_type: 'image' }, 
+                    (error, result) => error ? reject(error) : resolve(result)
+                );
+                stream.end(req.file.buffer);
+            });
+            imgUrl = result.secure_url;
+        }
+
+        await new Anunt({ 
+            telefon, categorie, titlu, pret, cartier, strada, detalii, imagine: imgUrl 
+        }).save();
+
+        res.status(201).json({ mesaj: "Anunț publicat cu succes!" });
+    } catch (err) { 
+        console.error("Eroare salvare anunț:", err);
+        res.status(500).json({ mesaj: "Eroare la salvarea anunțului" }); 
+    }
+});
+
+// ==========================================
+// RUTE CHAT
+// ==========================================
 app.get('/api/chat', async (req, res) => {
     try {
         const mesaje = await MesajChat.find().sort({ data: 1 }).limit(50);
         res.json(mesaje);
-    } catch(e) {
-        res.status(500).json({ mesaj: "Eroare chat" });
-    }
+    } catch(e) { res.status(500).json({ mesaj: "Eroare chat" }); }
 });
 
 app.post('/api/chat', async (req, res) => {
     try {
         const { nume, text } = req.body;
-        const mesajNou = new MesajChat({ nume, text });
-        await mesajNou.save();
-        res.status(201).json(mesajNou);
-    } catch(e) {
-        res.status(500).json({ mesaj: "Eroare trimitere mesaj" });
-    }
+        if (!nume || !text?.trim()) return res.status(400).json({ mesaj: "Mesaj invalid" });
+        
+        const m = await new MesajChat({ nume, text }).save();
+        res.status(201).json(m);
+    } catch(e) { res.status(500).json({ mesaj: "Eroare trimitere mesaj" }); }
 });
 
-
+// START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Serverul rulează pe portul ${PORT}`);
+    console.log(`🚀 Braila Hub rulează pe portul ${PORT}`);
 });
