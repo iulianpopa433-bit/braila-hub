@@ -224,3 +224,15 @@ function updateMusicUI(isPlaying) {
 }
 
 renderListings(listings);
+
+// Menținere conexiune activă / ping periodic
+setInterval(async () => {
+    try {
+        if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
+            const client = window.supabase || supabase;
+            await client.from('anunturi').select('id').limit(1);
+        }
+    } catch (err) {
+        console.log('Ping preventiv efectuat');
+    }
+}, 240000);
