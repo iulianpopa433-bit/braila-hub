@@ -1,0 +1,19 @@
+/* Stiluri generale suplimentare pentru experiență fluidă pe mobil */
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8fafc;
+}
+
+/* Asigură o tranziție fină pe butoane și carduri */
+button, a {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Ascunde bara orizontală de scroll pentru filtre dar menține funcționalitatea */
+.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+}
+.overflow-x-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
