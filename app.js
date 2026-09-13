@@ -1,8 +1,14 @@
-// Generare sau preluare ID unic pentru dispozitivul curent
-let deviceId = localStorage.getItem('brailaHubDeviceId');
-if (!deviceId) {
-    deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-    localStorage.setItem('brailaHubDeviceId', deviceId);
+// ID de dispozitiv robust (salvat sau generat stabil în sesiune)
+let deviceId = '';
+try {
+    deviceId = localStorage.getItem('brailaHubDeviceId');
+    if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem('brailaHubDeviceId', deviceId);
+    }
+} catch (e) {
+    deviceId = window.name || ('dev_' + Math.random().toString(36).substr(2, 9));
+    window.name = deviceId;
 }
 
 let listings = [];
@@ -86,7 +92,7 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Verificăm corect proprietarul: afișăm butonul dacă anunțul are ID-ul tău sau dacă nu are setat deloc un proprietar (anunțurile vechi)
+        // Afișăm butonul de ștergere dacă anunțul nu are proprietar sau aparține acestui dispozitiv
         let deleteButtonHtml = '';
         const itemOwner = item.device_id || item.deviceId;
         if (!itemOwner || itemOwner === deviceId) {
@@ -148,7 +154,6 @@ async function deleteListing(id) {
 }
 
 async function addNewListing(listingData) {
-    // Verificăm limita de 3 anunțuri direct din lista încărcată din baza de date/memorie
     const myDeviceListings = listings.filter(item => {
         const owner = item.device_id || item.deviceId;
         return owner === deviceId;
