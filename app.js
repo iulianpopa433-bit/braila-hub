@@ -74,16 +74,12 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Butonul de ștergere apare DOAR dacă anunțul aparține acestui dispozitiv 
-        // (Pentru compatibilitate cu anunțurile vechi, le lăsăm permise dacă nu au deloc deviceId setat)
-        let deleteButtonHtml = '';
-        if (!item.deviceId || item.deviceId === deviceId) {
-            deleteButtonHtml = `
-                <button onclick="deleteListing(${item.id})" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1">
-                    <i class="fa-solid fa-trash-can text-sm"></i>
-                </button>
-            `;
-        }
+        // Butonul de ștergere afișat direct pentru a putea gestiona ofertele ușor
+        let deleteButtonHtml = `
+            <button onclick="deleteListing(${item.id})" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1">
+                <i class="fa-solid fa-trash-can text-sm"></i>
+            </button>
+        `;
 
         card.innerHTML = `
             <div>
@@ -119,14 +115,6 @@ function renderListings(data) {
 function deleteListing(id) {
     if (confirm("Sigur doriți să ștergeți această ofertă?")) {
         let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
-        const itemToDelete = currentListings.find(i => i.id === id);
-        
-        // Verificare suplimentară de securitate locală
-        if (itemToDelete && itemToDelete.deviceId && itemToDelete.deviceId !== deviceId) {
-            alert("Nu puteți șterge un anunț adăugat de pe alt dispozitiv.");
-            return;
-        }
-
         const updated = currentListings.filter(item => item.id !== id);
         localStorage.setItem('brailaHubListings', JSON.stringify(updated));
         listings = updated;
@@ -134,11 +122,9 @@ function deleteListing(id) {
     }
 }
 
-// Funcție ajutătoare pentru adăugarea unui anunț nou respectând limita de 3 per dispozitiv
 function addNewListing(listingData) {
     let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     
-    // Numără câte anunțuri are deja acest dispozitiv
     const myDeviceListings = currentListings.filter(item => item.deviceId === deviceId);
     if (myDeviceListings.length >= 3) {
         alert("Ați atins limita maximă de 3 anunțuri active per dispozitiv.");
