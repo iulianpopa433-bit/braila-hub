@@ -87,9 +87,9 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Butonul de ștergere afișat direct pentru a putea gestiona ofertele ușor
+        // ID-ul pus între ghilimele simple pentru compatibilitate sigură cu Supabase
         let deleteButtonHtml = `
-            <button onclick="deleteListing(${item.id})" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1">
+            <button onclick="deleteListing('${item.id}')" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
                 <i class="fa-solid fa-trash-can text-sm"></i>
             </button>
         `;
@@ -140,7 +140,7 @@ async function deleteListing(id) {
         }
 
         let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
-        const updated = currentListings.filter(item => item.id !== id);
+        const updated = currentListings.filter(item => item.id != id);
         localStorage.setItem('brailaHubListings', JSON.stringify(updated));
         
         loadListings();
