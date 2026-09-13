@@ -1,3 +1,10 @@
+// Generare sau preluare ID unic pentru dispozitivul curent
+let deviceId = localStorage.getItem('brailaHubDeviceId');
+if (!deviceId) {
+    deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    localStorage.setItem('brailaHubDeviceId', deviceId);
+}
+
 function cleanExpiredListings() {
     let listings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     const now = Date.now();
@@ -49,10 +56,8 @@ function renderListings(data) {
             </div>`;
         }
 
-        // Afișare adresă clară dacă există
         let addressHtml = item.address ? `<p class="text-xs text-slate-600 mt-1.5 flex items-center gap-1.5 font-medium"><i class="fa-solid fa-map-pin text-rose-500"></i> <span class="bg-rose-50 text-rose-800 px-2 py-0.5 rounded-lg border border-rose-100">${item.address}</span></p>` : '';
 
-        // Butoane de contact afișate doar dacă există număr de telefon valid
         let contactButtonsHtml = '';
         if (item.phone && item.phone.trim().length >= 6) {
             contactButtonsHtml = `
@@ -69,6 +74,17 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
+        // Butonul de ștergere apare DOAR dacă anunțul aparține acestui dispozitiv 
+        // (Pentru compatibilitate cu anunțurile vechi, le lăsăm permise dacă nu au deloc deviceId setat)
+        let deleteButtonHtml = '';
+        if (!item.deviceId || item.deviceId === deviceId) {
+            deleteButtonHtml = `
+                <button onclick="deleteListing(${item.id})" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1">
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+            `;
+        }
+
         card.innerHTML = `
             <div>
                 ${imageHtml}
@@ -77,9 +93,7 @@ function renderListings(data) {
                     
                     <div class="flex justify-between items-start gap-2">
                         <h3 class="font-bold text-slate-800 text-base leading-snug mb-1">${item.title}</h3>
-                        <button onclick="deleteListing(${item.id})" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
+                        ${deleteButtonHtml}
                     </div>
                     
                     <p class="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
@@ -105,11 +119,44 @@ function renderListings(data) {
 function deleteListing(id) {
     if (confirm("Sigur doriți să ștergeți această ofertă?")) {
         let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
+        const itemToDelete = currentListings.find(i => i.id === id);
+        
+        // Verificare suplimentară de securitate locală
+        if (itemToDelete && itemToDelete.deviceId && itemToDelete.deviceId !== deviceId) {
+            alert("Nu puteți șterge un anunț adăugat de pe alt dispozitiv.");
+            return;
+        }
+
         const updated = currentListings.filter(item => item.id !== id);
         localStorage.setItem('brailaHubListings', JSON.stringify(updated));
         listings = updated;
         filterListings();
     }
+}
+
+// Funcție ajutătoare pentru adăugarea unui anunț nou respectând limita de 3 per dispozitiv
+function addNewListing(listingData) {
+    let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
+    
+    // Numără câte anunțuri are deja acest dispozitiv
+    const myDeviceListings = currentListings.filter(item => item.deviceId === deviceId);
+    if (myDeviceListings.length >= 3) {
+        alert("Ați atins limita maximă de 3 anunțuri active per dispozitiv.");
+        return false;
+    }
+
+    const newEntry = {
+        ...listingData,
+        id: Date.now(),
+        deviceId: deviceId,
+        createdAt: Date.now()
+    };
+
+    currentListings.unshift(newEntry);
+    localStorage.setItem('brailaHubListings', JSON.stringify(currentListings));
+    listings = currentListings;
+    filterListings();
+    return true;
 }
 
 function filterListings() {
@@ -159,7 +206,6 @@ setInterval(() => {
     }
 }, 5000);
 
-// Logica Sunetului Corectată
 let audio = document.getElementById('bgMusic');
 let isMusicPlaying = false;
 let audioUnlocked = false;
@@ -225,7 +271,6 @@ function updateMusicUI(isPlaying) {
 
 renderListings(listings);
 
-// Menținere conexiune activă / ping periodic
 setInterval(async () => {
     try {
         if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
