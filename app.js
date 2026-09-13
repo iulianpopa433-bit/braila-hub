@@ -7,12 +7,12 @@ if (!deviceId) {
 
 let listings = [];
 
-// Funcție pentru a încărca anunțurile (din Supabase sau fallback local)
+// Funcție pentru a încărca anunțurile (din Supabase - tabelul listings)
 async function loadListings() {
     try {
         const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
         if (client) {
-            const { data, error } = await client.from('anunturi').select('*').order('created_at', { ascending: false });
+            const { data, error } = await client.from('listings').select('*').order('created_at', { ascending: false });
             if (!error && data) {
                 listings = data;
                 renderListings(listings);
@@ -110,7 +110,7 @@ function renderListings(data) {
                     </div>
                     
                     <p class="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
-                        <i class="fa-solid fa-store text-emerald-600"></i> <strong class="text-slate-700">${item.provider}</strong> 
+                        <i class="fa-solid fa-store text-emerald-600"></i> <strong class="text-slate-700">${item.provider_name || item.provider}</strong> 
                         <span class="text-slate-300">•</span> 
                         <i class="fa-solid fa-location-dot text-rose-500"></i> ${item.location}
                     </p>
@@ -134,9 +134,9 @@ async function deleteListing(id) {
         try {
             const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
             if (client) {
-                // Verificare dublă ID + device_id direct în interogarea Supabase
+                // Ștergere din tabelul listings cu verificare dublă ID + device_id
                 const { error } = await client
-                    .from('anunturi')
+                    .from('listings')
                     .delete()
                     .match({ id: id, device_id: deviceId });
 
@@ -169,10 +169,10 @@ function addNewListing(listingData) {
 
     const newEntry = {
         ...listingData,
-        id: Date.now(),
-        device_id: deviceId, // Setat atât sub formă de device_id (pentru Supabase)
-        deviceId: deviceId,  // cât și deviceId (pentru localStorage)
-        createdAt: Date.now()
+        id: 'lst_' + Date.now(),
+        device_id: deviceId,
+        deviceId: deviceId,
+        created_at: Date.now()
     };
 
     currentListings.unshift(newEntry);
@@ -189,7 +189,7 @@ function filterListings() {
     const selectedCategory = categoryFilter.value;
 
     const filtered = listings.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm) || item.provider.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm);
+        const matchesSearch = item.title.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm) || (item.provider_name || item.provider || '').toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm);
         const matchesLocation = selectedLocation === "" || item.location === selectedLocation;
         const matchesCategory = selectedCategory === "" || item.category === selectedCategory;
         return matchesSearch && matchesLocation && matchesCategory;
@@ -298,7 +298,7 @@ setInterval(async () => {
     try {
         if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
             const client = window.supabase || supabase;
-            await client.from('anunturi').select('id').limit(1);
+            await client.from('listings').select('id').limit(1);
         }
     } catch (err) {
         console.log('Ping preventiv efectuat');
