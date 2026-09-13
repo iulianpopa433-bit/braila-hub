@@ -87,12 +87,16 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // ID-ul pus între ghilimele simple pentru compatibilitate sigură cu Supabase
-        let deleteButtonHtml = `
-            <button onclick="deleteListing('${item.id}')" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
-                <i class="fa-solid fa-trash-can text-sm"></i>
-            </button>
-        `;
+        // Afișarea butonului de ștergere DOAR dacă anunțul aparține dispozitivului curent
+        let deleteButtonHtml = '';
+        const itemOwner = item.device_id || item.deviceId;
+        if (itemOwner && itemOwner === deviceId) {
+            deleteButtonHtml = `
+                <button onclick="deleteListing('${item.id}')" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+            `;
+        }
 
         card.innerHTML = `
             <div>
@@ -130,9 +134,16 @@ async function deleteListing(id) {
         try {
             const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
             if (client) {
-                const { error } = await client.from('anunturi').delete().eq('id', id);
+                // Verificare dublă ID + device_id direct în interogarea Supabase
+                const { error } = await client
+                    .from('anunturi')
+                    .delete()
+                    .match({ id: id, device_id: deviceId });
+
                 if (error) {
                     console.error("Eroare la ștergerea din Supabase:", error);
+                    alert("Nu dețineți permisiunea de a șterge acest anunț.");
+                    return;
                 }
             }
         } catch (err) {
@@ -150,7 +161,7 @@ async function deleteListing(id) {
 function addNewListing(listingData) {
     let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     
-    const myDeviceListings = currentListings.filter(item => item.deviceId === deviceId);
+    const myDeviceListings = currentListings.filter(item => (item.deviceId || item.device_id) === deviceId);
     if (myDeviceListings.length >= 3) {
         alert("Ați atins limita maximă de 3 anunțuri active per dispozitiv.");
         return false;
@@ -159,7 +170,8 @@ function addNewListing(listingData) {
     const newEntry = {
         ...listingData,
         id: Date.now(),
-        deviceId: deviceId,
+        device_id: deviceId, // Setat atât sub formă de device_id (pentru Supabase)
+        deviceId: deviceId,  // cât și deviceId (pentru localStorage)
         createdAt: Date.now()
     };
 
