@@ -5,20 +5,33 @@ if (!deviceId) {
     localStorage.setItem('brailaHubDeviceId', deviceId);
 }
 
-function cleanExpiredListings() {
-    let listings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
-    const now = Date.now();
-    const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
-    const validListings = listings.filter(item => (now - item.createdAt) < fiveDaysInMs);
-    localStorage.setItem('brailaHubListings', JSON.stringify(validListings));
-    return validListings;
+let listings = [];
+
+// Funcție pentru a încărca anunțurile (din Supabase sau fallback local)
+async function loadListings() {
+    try {
+        const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+        if (client) {
+            const { data, error } = await client.from('anunturi').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+                listings = data;
+                renderListings(listings);
+                const subCountEl = document.getElementById('subscriberCount');
+                if(subCountEl) subCountEl.innerText = listings.length > 0 ? listings.length : 1;
+                return;
+            }
+        }
+    } catch (e) {
+        console.log("Se folosește stocarea locală.");
+    }
+    
+    // Fallback local dacă Supabase nu e activ momentan
+    let localData = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
+    listings = localData;
+    renderListings(listings);
+    const subCountEl = document.getElementById('subscriberCount');
+    if(subCountEl) subCountEl.innerText = listings.length > 0 ? listings.length : 1;
 }
-
-let listings = cleanExpiredListings();
-
-const providers = JSON.parse(localStorage.getItem('brailaHubProviders')) || [];
-const subCountEl = document.getElementById('subscriberCount');
-if(subCountEl) subCountEl.innerText = listings.length > 0 ? listings.length : 1;
 
 const container = document.getElementById('listingsContainer');
 const searchInput = document.getElementById('searchInput');
@@ -112,13 +125,25 @@ function renderListings(data) {
     });
 }
 
-function deleteListing(id) {
+async function deleteListing(id) {
     if (confirm("Sigur doriți să ștergeți această ofertă?")) {
+        try {
+            const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+            if (client) {
+                const { error } = await client.from('anunturi').delete().eq('id', id);
+                if (error) {
+                    console.error("Eroare la ștergerea din Supabase:", error);
+                }
+            }
+        } catch (err) {
+            console.error("Eroare:", err);
+        }
+
         let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
         const updated = currentListings.filter(item => item.id !== id);
         localStorage.setItem('brailaHubListings', JSON.stringify(updated));
-        listings = updated;
-        filterListings();
+        
+        loadListings();
     }
 }
 
@@ -255,7 +280,7 @@ function updateMusicUI(isPlaying) {
     }
 }
 
-renderListings(listings);
+loadListings();
 
 setInterval(async () => {
     try {
