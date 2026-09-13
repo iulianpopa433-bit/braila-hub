@@ -87,12 +87,16 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Afișează direct butonul de ștergere pe toate cardurile
-        let deleteButtonHtml = `
-            <button onclick="deleteListing('${item.id}')" title="Șterge oferta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
-                <i class="fa-solid fa-trash-can text-sm"></i>
-            </button>
-        `;
+        // Afișează butonul de ștergere DOAR dacă anunțul aparține acestui dispozitiv
+        let deleteButtonHtml = '';
+        const itemOwner = item.device_id || item.deviceId;
+        if (itemOwner && itemOwner === deviceId) {
+            deleteButtonHtml = `
+                <button onclick="deleteListing('${item.id}')" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+            `;
+        }
 
         card.innerHTML = `
             <div>
@@ -130,7 +134,6 @@ async function deleteListing(id) {
         try {
             const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
             if (client) {
-                // Ștergere directă din Supabase după ID-ul unic al anunțului
                 const { error } = await client
                     .from('listings')
                     .delete()
