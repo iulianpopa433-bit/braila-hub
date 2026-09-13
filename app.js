@@ -7,7 +7,7 @@ if (!deviceId) {
 
 let listings = [];
 
-// Funcție pentru a încărca anunțurile (din Supabase - tabelul listings)
+// Funcție pentru a încărca anunțurile
 async function loadListings() {
     try {
         const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
@@ -25,7 +25,6 @@ async function loadListings() {
         console.log("Se folosește stocarea locală.");
     }
     
-    // Fallback local dacă Supabase nu e activ momentan
     let localData = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     listings = localData;
     renderListings(listings);
@@ -87,10 +86,10 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Afișează butonul de ștergere DOAR dacă anunțul aparține acestui dispozitiv
+        // Verificăm corect proprietarul: afișăm butonul dacă anunțul are ID-ul tău sau dacă nu are setat deloc un proprietar (anunțurile vechi)
         let deleteButtonHtml = '';
         const itemOwner = item.device_id || item.deviceId;
-        if (itemOwner && itemOwner === deviceId) {
+        if (!itemOwner || itemOwner === deviceId) {
             deleteButtonHtml = `
                 <button onclick="deleteListing('${item.id}')" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
                     <i class="fa-solid fa-trash-can text-sm"></i>
@@ -134,16 +133,7 @@ async function deleteListing(id) {
         try {
             const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
             if (client) {
-                const { error } = await client
-                    .from('listings')
-                    .delete()
-                    .match({ id: id });
-
-                if (error) {
-                    console.error("Eroare la ștergerea din Supabase:", error);
-                    alert("Eroare la ștergerea din baza de date.");
-                    return;
-                }
+                await client.from('listings').delete().match({ id: id });
             }
         } catch (err) {
             console.error("Eroare:", err);
@@ -158,9 +148,12 @@ async function deleteListing(id) {
 }
 
 async function addNewListing(listingData) {
-    let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
-    
-    const myDeviceListings = currentListings.filter(item => (item.deviceId || item.device_id) === deviceId);
+    // Verificăm limita de 3 anunțuri direct din lista încărcată din baza de date/memorie
+    const myDeviceListings = listings.filter(item => {
+        const owner = item.device_id || item.deviceId;
+        return owner === deviceId;
+    });
+
     if (myDeviceListings.length >= 3) {
         alert("Ați atins limita maximă de 3 anunțuri active per dispozitiv.");
         return false;
@@ -179,17 +172,16 @@ async function addNewListing(listingData) {
         if (client) {
             const { error } = await client.from('listings').insert([newEntry]);
             if (error) {
-                console.error("Eroare Supabase la inserare:", error.message);
                 alert("Eroare la salvarea în baza de date: " + error.message);
                 return false;
             }
         }
     } catch (err) {
-        console.error("Eroare de conexiune:", err);
         alert("Nu s-a putut contacta baza de date.");
         return false;
     }
 
+    let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     currentListings.unshift(newEntry);
     localStorage.setItem('brailaHubListings', JSON.stringify(currentListings));
     
@@ -255,14 +247,13 @@ function unlockAudioOnFirstClick() {
         audio.play().then(() => {
             isMusicPlaying = true;
             updateMusicUI(true);
-        }).catch(e => console.log("Redare audio amânată de browser:", e));
+        }).catch(e => console.log("Redare audio amânată"));
     }
 }
 
 function toggleMusic(event) {
     event.stopPropagation();
     if (!audio) return;
-    
     if (isMusicPlaying) {
         audio.pause();
         isMusicPlaying = false;
@@ -272,7 +263,7 @@ function toggleMusic(event) {
         audio.play().then(() => {
             isMusicPlaying = true;
             updateMusicUI(true);
-        }).catch(e => alert("Apasă o singură dată oriunde pe pagină pentru a debloca fluxul audio."));
+        }).catch(e => alert("Apasă o singură dată oriunde pe pagină pentru a debloca sunetul."));
     }
 }
 
@@ -308,14 +299,3 @@ function updateMusicUI(isPlaying) {
 }
 
 loadListings();
-
-setInterval(async () => {
-    try {
-        if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
-            const client = window.supabase || supabase;
-            await client.from('listings').select('id').limit(1);
-        }
-    } catch (err) {
-        console.log('Ping preventiv efectuat');
-    }
-}, 240000);
