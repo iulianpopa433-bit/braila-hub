@@ -154,11 +154,11 @@ async function deleteListing(id) {
         const updated = currentListings.filter(item => item.id != id);
         localStorage.setItem('brailaHubListings', JSON.stringify(updated));
         
-        loadListings();
+        await loadListings();
     }
 }
 
-function addNewListing(listingData) {
+async function addNewListing(listingData) {
     let currentListings = JSON.parse(localStorage.getItem('brailaHubListings')) || [];
     
     const myDeviceListings = currentListings.filter(item => (item.deviceId || item.device_id) === deviceId);
@@ -175,10 +175,26 @@ function addNewListing(listingData) {
         created_at: Date.now()
     };
 
+    try {
+        const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+        if (client) {
+            const { error } = await client.from('listings').insert([newEntry]);
+            if (error) {
+                console.error("Eroare Supabase la inserare:", error.message);
+                alert("Eroare la salvarea în baza de date: " + error.message);
+                return false;
+            }
+        }
+    } catch (err) {
+        console.error("Eroare de conexiune:", err);
+        alert("Nu s-a putut contacta baza de date.");
+        return false;
+    }
+
     currentListings.unshift(newEntry);
     localStorage.setItem('brailaHubListings', JSON.stringify(currentListings));
-    listings = currentListings;
-    filterListings();
+    
+    await loadListings();
     return true;
 }
 
