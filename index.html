@@ -485,7 +485,11 @@
                 const userName = userNameInput ? userNameInput.value.trim() : '';
                 const text = textInput ? textInput.value.trim() : '';
 
-                const payload = { user_name: userName, text: text };
+                const payload = { 
+                     user_name: userName, 
+                     text: text, 
+                     time: new Date().toLocaleTimeString() 
+                };
                 console.log("Payload trimis către Supabase:", payload);
 
                 if(!userName || !text) {
