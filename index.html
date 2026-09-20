@@ -47,7 +47,7 @@
                         <span id="musicLabel" class="text-[11px] font-medium text-emerald-200">Sunet Oprit</span>
                     </div>
 
-                    <!-- Buton Distribuire (Share) Nou Adăugat -->
+                    <!-- Buton Distribuire (Share) -->
                     <button onclick="sharePlatform()" class="bg-white/10 hover:bg-white/20 text-emerald-200 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl border border-white/15 transition flex items-center gap-1.5 backdrop-blur-md">
                         <i class="fa-solid fa-share-nodes"></i> Distribuie
                     </button>
@@ -346,19 +346,6 @@
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ID de dispozitiv robust pentru limită
-        let deviceId = '';
-        try {
-            deviceId = localStorage.getItem('brailaHubDeviceId');
-            if (!deviceId) {
-                deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-                localStorage.setItem('brailaHubDeviceId', deviceId);
-            }
-        } catch (e) {
-            deviceId = window.name || ('dev_' + Math.random().toString(36).substr(2, 9));
-            window.name = deviceId;
-        }
-
         let listings = [];
 
         // Contor vizite
@@ -500,20 +487,9 @@
             }
         }
 
-        // Gestionare trimitere formular ofertă nouă (cu limită de 5 anunțuri și ștergere automată după 5 zile)
+        // Gestionare trimitere formular ofertă nouă (compatibilă 100% cu tabela ta existentă)
         document.getElementById('listingForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            // Verificare limită 5 anunțuri pe dispozitiv
-            const myDeviceListings = listings.filter(item => {
-                const owner = item.device_id || item.deviceId;
-                return owner === deviceId;
-            });
-
-            if (myDeviceListings.length >= 5) {
-                alert("Ați atins limita maximă de 5 anunțuri active per dispozitiv.");
-                return;
-            }
 
             const providerName = document.getElementById('providerName').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -526,7 +502,6 @@
             const description = document.getElementById('description').value.trim();
             const imageInput = document.getElementById('imageInput');
 
-            let imageUrl = "";
             const newEntryData = {
                 provider_name: providerName,
                 phone,
@@ -537,8 +512,6 @@
                 location,
                 price,
                 description,
-                device_id: deviceId,
-                deviceId: deviceId,
                 created_at: new Date().toISOString()
             };
 
@@ -589,7 +562,6 @@
             }
 
             if (data) {
-                // Ștergere automată anunțuri mai vechi de 5 zile
                 const acum = Date.now();
                 const cinciZileMS = 5 * 24 * 60 * 60 * 1000;
                 
@@ -600,7 +572,6 @@
                     }
                 }
 
-                // Preluare actualizată după curățare
                 const { data: cleanData } = await supabaseClient
                     .from('listings')
                     .select('*')
@@ -651,26 +622,12 @@
                     </div>
                 ` : `<span class="text-xs text-slate-400">Contact la adresă / magazin</span>`;
 
-                // Buton stergere proprietar
-                let deleteButtonHtml = '';
-                const itemOwner = item.device_id || item.deviceId;
-                if (!itemOwner || itemOwner === deviceId) {
-                    deleteButtonHtml = `
-                        <button onclick="deleteListing('${item.id}')" title="Șterge oferta ta" class="text-slate-300 hover:text-red-500 transition p-1 cursor-pointer">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
-                    `;
-                }
-
                 card.innerHTML = `
                     <div>
                         ${imageHtml}
                         <div class="p-5">
                             ${!item.image ? `<span class="bg-emerald-50 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-emerald-100 inline-block mb-2">${item.category}</span>` : ''}
-                            <div class="flex justify-between items-start gap-2">
-                                <h3 class="font-extrabold text-slate-800 text-base mb-1">${item.title}</h3>
-                                ${deleteButtonHtml}
-                            </div>
+                            <h3 class="font-extrabold text-slate-800 text-base mb-1">${item.title}</h3>
                             <p class="text-xs text-slate-500 font-medium mb-2">
                                 <i class="fa-solid fa-store text-emerald-600"></i> ${item.provider_name || item.provider} • <i class="fa-solid fa-location-dot text-rose-500"></i> ${item.location}
                             </p>
@@ -685,17 +642,6 @@
                 `;
                 container.appendChild(card);
             });
-        }
-
-        async function deleteListing(id) {
-            if (confirm("Sigur doriți să ștergeți această ofertă?")) {
-                const { error } = await supabaseClient.from('listings').delete().match({ id: id });
-                if (error) {
-                    alert("Eroare la ștergere: " + error.message);
-                    return;
-                }
-                loadListings();
-            }
         }
 
         // Filtrare anunțuri
