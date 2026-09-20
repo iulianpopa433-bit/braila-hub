@@ -485,26 +485,38 @@
                 const userName = userNameInput ? userNameInput.value.trim() : '';
                 const text = textInput ? textInput.value.trim() : '';
 
-                const payload = { 
-                     user_name: userName, 
-                     text: text, 
-                     time: new Date().toLocaleTimeString() 
-                };
-                console.log("Payload trimis către Supabase:", payload);
-
                 if(!userName || !text) {
                     alert('Completează numele și mesajul!');
                     return;
                 }
 
+                // Listă extinsă de cuvinte și expresii jignitoare de blocat
+                const badWords = [
+                    'prost', 'proasta', 'idiot', 'idiota', 'cretin', 'cretina', 
+                    'imbecil', 'imbecila', 'taran', 'taranca', 'fut', 'morții', 
+                    'mormant', 'pula', 'coaie', 'cur', 'pizda', 'baga-mi-as', 
+                    'futu-te', 'jegos', 'lepros', 'dobitoc', 'handicapat', 'retardat'
+                ]; 
+
+                const textLower = text.toLowerCase();
+                const containsBadWords = badWords.some(word => textLower.includes(word));
+
+                if (containsBadWords) {
+                    alert('Mesajul tău conține limbaj neadecvat și nu poate fi trimis.');
+                    return; // Oprește trimiterea mesajului
+                }
+
+                const payload = { 
+                    user_name: userName, 
+                    text: text 
+                };
+
                 const { data, error } = await supabaseClient
                     .from('messages')
                     .insert([payload]);
 
-                console.log({ data, error, payload });
-
                 if(error) {
-                    console.error('Detalii eroare Supabase:', error);
+                    console.error('Eroare la trimiterea mesajului:', error);
                     alert('Eroare la trimiterea mesajului: ' + error.message);
                     return;
                 }
@@ -513,6 +525,9 @@
                 renderChatMessages();
             });
         }
+
+              
+           
 
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
