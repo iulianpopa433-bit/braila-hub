@@ -512,7 +512,7 @@
                 location,
                 price,
                 description,
-                created_at: new Date().toISOString()
+                created_at: Date.now()
             };
 
             if (imageInput && imageInput.files && imageInput.files[0]) {
