@@ -439,6 +439,7 @@
             if(categoryFilter) {
                 categoryFilter.value = categoryName;
                 filterAndRenderListings();
+                document.getElementById('listingsSection')?.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
