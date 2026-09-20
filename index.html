@@ -486,7 +486,7 @@
 
                 const { error } = await supabaseClient
                     .from('messages')
-                    .insert([{ user_name: userName, text: text, created_at: new Date().toISOString() }]);
+                    .insert([{ user_name: userName, text: text }]);
 
                 if(error) {
                     console.error('Eroare la trimiterea mesajului:', error);
