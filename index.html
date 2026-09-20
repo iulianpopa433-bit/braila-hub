@@ -479,21 +479,33 @@
         if(chatForm) {
             chatForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const userName = document.getElementById('chatUser').value.trim();
-                const text = document.getElementById('chatText').value.trim();
+                const userNameInput = document.getElementById('chatUser');
+                const textInput = document.getElementById('chatText');
 
-                if(!userName || !text) return;
+                const userName = userNameInput ? userNameInput.value.trim() : '';
+                const text = textInput ? textInput.value.trim() : '';
 
-                const { error } = await supabaseClient
-                    .from('messages')
-                    .insert([{ user_name: userName, text: text }]);
+                const payload = { user_name: userName, text: text };
+                console.log("Payload trimis către Supabase:", payload);
 
-                if(error) {
-                    console.error('Eroare la trimiterea mesajului:', error);
+                if(!userName || !text) {
+                    alert('Completează numele și mesajul!');
                     return;
                 }
 
-                document.getElementById('chatText').value = '';
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .insert([payload]);
+
+                console.log({ data, error, payload });
+
+                if(error) {
+                    console.error('Detalii eroare Supabase:', error);
+                    alert('Eroare la trimiterea mesajului: ' + error.message);
+                    return;
+                }
+
+                if(textInput) textInput.value = '';
                 renderChatMessages();
             });
         }
