@@ -13,14 +13,32 @@ try {
 
 let listings = [];
 
-// Funcție pentru a încărca anunțurile
+// Funcție pentru a încărca anunțurile și a șterge automat ce a depășit 5 zile
 async function loadListings() {
     try {
         const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
         if (client) {
             const { data, error } = await client.from('listings').select('*').order('created_at', { ascending: false });
             if (!error && data) {
-                listings = data;
+                // Verificare ștergere automată după 5 zile (5 * 24 * 60 * 60 * 1000 ms)
+                const acum = Date.now();
+                const cinciZileMS = 5 * 24 * 60 * 60 * 1000;
+                
+                for (let item of data) {
+                    const createdAtTime = Number(item.created_at) || new Date(item.created_at).getTime();
+                    if (createdAtTime && (acum - createdAtTime > cinciZileMS)) {
+                        await client.from('listings').delete().match({ id: item.id });
+                    }
+                }
+
+                // Reîncărcăm datele curate după curățare
+                const { data: cleanData, error: cleanError } = await client.from('listings').select('*').order('created_at', { ascending: false });
+                if (!cleanError && cleanData) {
+                    listings = cleanData;
+                } else {
+                    listings = data;
+                }
+
                 renderListings(listings);
                 const subCountEl = document.getElementById('subscriberCount');
                 if(subCountEl) subCountEl.innerText = listings.length > 0 ? listings.length : 1;
@@ -92,7 +110,6 @@ function renderListings(data) {
             contactButtonsHtml = `<span class="text-[11px] text-slate-400 italic">Contact la adresă / magazin</span>`;
         }
 
-        // Afișăm butonul de ștergere dacă anunțul nu are proprietar sau aparține acestui dispozitiv
         let deleteButtonHtml = '';
         const itemOwner = item.device_id || item.deviceId;
         if (!itemOwner || itemOwner === deviceId) {
@@ -159,8 +176,9 @@ async function addNewListing(listingData) {
         return owner === deviceId;
     });
 
-    if (myDeviceListings.length >= 3) {
-        alert("Ați atins limita maximă de 3 anunțuri active per dispozitiv.");
+    // Limită actualizată la 5 anunțuri per dispozitiv
+    if (myDeviceListings.length >= 5) {
+        alert("Ați atins limita maximă de 5 anunțuri active per dispozitiv.");
         return false;
     }
 
@@ -194,6 +212,23 @@ async function addNewListing(listingData) {
     return true;
 }
 
+// Funcție nouă pentru partajare (WhatsApp, Facebook, Email, Copiere Link)
+function sharePlatform() {
+    const shareData = {
+        title: 'Brăila Hub',
+        text: 'Descoperă ofertele locale, producătorii și magazinele din județul Brăila!',
+        url: window.location.href
+    };
+
+    if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
+    } else {
+        // Fallback: copiere în clipboard și alertă cu opțiuni rapide
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link-ul platformei a fost copiat în clipboard! Îl poți trimite pe WhatsApp, Email sau rețelele sociale.");
+    }
+}
+
 function filterListings() {
     if(!searchInput) return;
     const searchTerm = searchInput.value.toLowerCase();
@@ -222,7 +257,7 @@ function selectCategory(categoryName) {
 }
 
 if(searchInput) searchInput.addEventListener('input', filterListings);
-if(locationFilter) locationFilter.addEventListener('change', filterListings);
+if(locationFilter) locationFilter.locationFilter?.addEventListener('change', filterListings);
 if(categoryFilter) categoryFilter.addEventListener('change', filterListings);
 
 const ads = [
