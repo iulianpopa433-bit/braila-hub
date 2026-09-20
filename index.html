@@ -503,6 +503,7 @@
             const imageInput = document.getElementById('imageInput');
 
             const newEntryData = {
+                id: 'lst_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 provider_name: providerName,
                 phone,
                 email,
